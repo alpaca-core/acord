@@ -3,9 +3,9 @@
 #
 cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
-project(tpl-ac-local-app
-    VERSION 1.0.0
-    DESCRIPTION "Example application which uses AC Local"
+project(acord
+    VERSION 0.1.0
+    DESCRIPTION "Alpaca Core local daemon"
     LANGUAGES CXX
 )
 
@@ -21,6 +21,7 @@ add_ac_local(0.1.1)
 
 #######################################
 # subdirs / targets
+
 add_executable(${PROJECT_NAME}
     main.cpp
 )
