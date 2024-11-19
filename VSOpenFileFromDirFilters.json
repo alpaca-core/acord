@@ -1,0 +1,12 @@
+{
+  "dirs": [
+    ".git",
+    ".vs",
+    "build",
+    "out",
+    "tmp",
+    ".cxx",
+    ".gradle",
+    ".idea"
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "version": 5,
+  "vendor": {
+    "comments": {
+      "intro": "This is the only place where comments are allowed before CMake 3.31 (preset version 10)"
+    }
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}"
+    },
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "base-release",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+
+    {
+      "name": "standalone",
+      "description": "Standalone build. Suitable for users and CI builds.",
+      "hidden": true
+    },
+    {
+      "name": "mono",
+      "description": "ac-build monorepo. Deps on other projects are resolved by paths relative to this one. Suitable for local development.",
+      "hidden": true,
+      "cacheVariables": {
+        "AC_BUILD_MONO": true
+      }
+    },
+    {
+      "name": "component",
+      "description": "ac-build component. Deps on other projects are resolved by find_package.",
+      "hidden": true,
+      "cacheVariables": {
+        "AC_BUILD_COMPONENT": true
+      }
+    },
+
+    {
+      "name": "debug",
+      "inherits": ["base-debug", "mono"]
+    },
+    {
+      "name": "release",
+      "inherits": [ "base-release", "mono" ]
+    },
+
+    {
+      "name": "debug-mono-comp",
+      "inherits": ["base-debug", "mono", "component"],
+      "cacheVariables": {
+        "ac-local_ROOT": "${sourceDir}/../ac-local/out/build/debug"
+      }
+    },
+
+    {
+      "name": "gcc",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
+      }
+    },
+
+    {
+      "name": "android",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Android",
+        "CMAKE_SYSTEM_VERSION": "24",
+        "CMAKE_ANDROID_ARCH_ABI": "arm64-v8a",
+        "CMAKE_ANDROID_NDK": {
+          "value": "$env{ANDROID_NDK_ROOT}",
+          "type": "PATH"
+        },
+        "CMAKE_ANDROID_STL_TYPE": "c++_static"
+      }
+    },
+
+    {
+      "name": "asan",
+      "hidden": true,
+      "cacheVariables": { "SAN_ADDR": true }
+    },
+    {
+      "name": "ubsan",
+      "hidden": true,
+      "cacheVariables": { "SAN_UB": true }
+    },
+    {
+      "name": "lsan",
+      "hidden": true,
+      "cacheVariables": { "SAN_LEAK": true }
+    },
+    {
+      "name": "tsan",
+      "hidden": true,
+      "cacheVariables": { "SAN_THREAD": true }
+    },
+
+    {
+      "name": "debug-asan",
+      "inherits": ["debug", "asan"]
+    },
+    {
+      "name": "release-asan",
+      "inherits": ["release", "asan"]
+    },
+    {
+      "name": "debug-tsan",
+      "inherits": ["debug", "tsan"]
+    },
+    {
+      "name": "release-tsan",
+      "inherits": ["release", "tsan"]
+    },
+    {
+      "name": "debug-aublsan",
+      "description": "combining addr, ub and leak sanitizers is widely supported on many platforms",
+      "inherits": ["debug", "asan", "ubsan", "lsan"]
+    }
+  ]
+}
