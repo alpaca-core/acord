@@ -1,7 +1,7 @@
 #include <ac/local/Model.hpp>
+#include <ac/local/ModelAssetDesc.hpp>
 #include <ac/local/Instance.hpp>
 #include <ac/local/Lib.hpp>
-#include <ac/local/ModelLoaderRegistry.hpp>
 
 #include <ac/jalog/Instance.hpp>
 #include <ac/jalog/sinks/DefaultSink.hpp>
@@ -22,14 +22,14 @@ int main() try {
 
     ac::local::Lib::loadAllPlugins();
 
-    auto model = ac::local::Lib::modelLoaderRegistry().createModel({
-        .inferenceType = "foo",
+    auto model = ac::local::Lib::loadModel({
+        .type = "foo",
         .name = "foo-synthetic"
-        }, {});
+    }, {});
 
     auto instance = model->createInstance("general", {});
 
-    auto opResult = instance->runOp("run", { {"input", {"The", "song", "goes:"}}, {"splice", false}});
+    auto opResult = instance->runOp("run", {{"input", {"The", "song", "goes:"}}, {"splice", false}});
 
     std::cout << opResult << "\n";
 }
