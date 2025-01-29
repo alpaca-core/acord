@@ -9,6 +9,8 @@ project(acord
     LANGUAGES CXX
 )
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 include(./get-ac-build.cmake)
 
 include(init_ac_prj)
@@ -18,17 +20,7 @@ include(ac_build_prj_util)
 # packages
 
 add_ac_local(0.1.9)
-
-#######################################
-# subdirs / targets
-
-add_executable(${PROJECT_NAME}
-    main.cpp
-)
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    ac::local
-    ac::jalog
-)
+ac_dep(fishnets)
 
 #######################################
 # plugins
@@ -39,7 +31,9 @@ if(NOT AC_BUILD_DEPLOY)
         VERSION 1.0.0
         GITHUB alpaca-core/ilib-foo
     )
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        aclp::out-dir
-    )
 endif()
+
+#######################################
+# subdirs / targets
+
+add_subdirectory(server)
