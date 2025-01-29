@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 //
 #include "WsSession.hpp"
+#include "LocalSession.hpp"
+#include "AppCtx.hpp"
 
 #include <ac/local/Lib.hpp>
 #include <ac/frameio/local/LocalIoCtx.hpp>
@@ -25,9 +27,14 @@ int main() {
 
     ac::local::Lib::loadAllPlugins();
 
-    fishnets::WebSocketServer server(makeWsSession, 7654, 3, nullptr);
-
     ac::frameio::LocalIoCtx io;
+    LocalSessionFactory sessionFactory;
+    AppCtx ctx{io, sessionFactory};
+
+    fishnets::WebSocketServer server([&](const fishnets::WebSocketEndpointInfo&) {
+        return makeWsSession(ctx);
+    }, 7654, 3, nullptr);
+
     io.run();
 
     // should never get to here
