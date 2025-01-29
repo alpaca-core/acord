@@ -11,12 +11,11 @@ include(./get_cpm.cmake)
 
 # ac-build
 if(AC_BUILD_MONO)
-    set(acLocalCMakeLibDir "${CMAKE_SOURCE_DIR}/../ac-build")
+    set(ac-build_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../ac-build")
 else()
-    CPMAddPackage(gh:alpaca-core/ac-build@1.0.0)
-    set(acLocalCMakeLibDir "${ac-build_SOURCE_DIR}")
+    CPMAddPackage(gh:alpaca-core/ac-build@1.1.0)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH
-    "${acLocalCMakeLibDir}"
+    "${ac-build_SOURCE_DIR}"
 )

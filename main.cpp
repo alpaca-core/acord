@@ -1,7 +1,6 @@
-#include <ac/local/Model.hpp>
-#include <ac/local/ModelAssetDesc.hpp>
-#include <ac/local/Instance.hpp>
 #include <ac/local/Lib.hpp>
+#include <ac/frameio/local/LocalIoRunner.hpp>
+#include <ac/frameio/local/BlockingIo.hpp>
 
 #include <ac/jalog/Instance.hpp>
 #include <ac/jalog/sinks/DefaultSink.hpp>
@@ -12,7 +11,7 @@
 #include "aclp-out-dir.h"
 #endif
 
-int main() try {
+int main() {
     ac::jalog::Instance jl;
     jl.setup().add<ac::jalog::sinks::DefaultSink>();
 
@@ -22,18 +21,20 @@ int main() try {
 
     ac::local::Lib::loadAllPlugins();
 
-    auto model = ac::local::Lib::loadModel({
-        .type = "foo",
-        .name = "foo-synthetic"
-    }, {});
+    ac::frameio::LocalIoRunner io;
+    auto fooHandler = ac::local::Lib::createSessionHandler("foo");
+    auto foo = io.connectBlocking(std::move(fooHandler));
 
-    auto instance = model->createInstance("general", {});
+    foo.poll(); // state info from plugin (dummy)
+    foo.push({ "load_model", {} });
+    foo.poll(); // load_model response
+    foo.poll(); // state info from plugin (model loaded)
+    foo.push({ "create_instance", {} });
+    foo.poll(); // creat_instance response
+    foo.poll(); // state info from plugin (instance created)
+    foo.push({ "run", {{"input", {"The", "song", "goes:"}}, {"splice", false}} });
 
-    auto opResult = instance->runOp("run", {{"input", {"The", "song", "goes:"}}, {"splice", false}});
-
-    std::cout << opResult << "\n";
-}
-catch (std::exception& e) {
-    std::cerr << "exception: " << e.what() << "\n";
-    return 1;
+    auto result = foo.poll(); // run response
+    std::cout << result.frame.data << "\n";
+    return 0;
 }
