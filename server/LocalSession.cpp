@@ -3,6 +3,8 @@
 //
 #include "LocalSession.hpp"
 #include <ac/frameio/SessionCoro.hpp>
+#include <ac/local/Lib.hpp>
+
 #include <ac/jalog/Log.hpp>
 
 namespace {
@@ -24,5 +26,6 @@ ac::frameio::SessionCoro<void> localSession() {
 } // namespace
 
 ac::frameio::SessionHandlerPtr LocalSessionFactory::createHandler() {
-    return ac::frameio::CoroSessionHandler::create(localSession());
+    // return ac::frameio::CoroSessionHandler::create(localSession());
+    return ac::local::Lib::createSessionHandler("foo");
 }
