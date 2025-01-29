@@ -72,10 +72,11 @@ public:
 
     void wsReceivedText(itlib::span<char> text) override {
         auto& frame = m_received.emplace_back();
-        frame.op = std::string(text.begin(), text.end());
-        //auto json = ac::Dict::parse(text.begin(), text.end());
-        //frame.op = json["op"].get<std::string>();
-        //frame.data = std::move(json["data"]);
+
+        auto json = ac::Dict::parse(text.begin(), text.end());
+        frame.op = json["op"].get<std::string>();
+        frame.data = std::move(json["data"]);
+
         if (m_received.size() == 1) {
             tryWriteToLocalSession();
         }
@@ -96,11 +97,10 @@ public:
             });
 
             if (res.success()) {
-                //ac::Dict json;
-                //json["op"] = std::move(frame.op);
-                //json["data"] = std::move(frame.data);
-                //buf = json.dump();
-                buf = frame.op;
+                ac::Dict json;
+                json["op"] = std::move(frame.op);
+                json["data"] = std::move(frame.data);
+                buf = json.dump();
                 continue;
             }
 
@@ -108,7 +108,7 @@ public:
             if (res.closed()) {
                 wsClose();
             }
-            assert(res.blocked());
+            assert(res.closed() || res.blocked());
             break;
         }
 
