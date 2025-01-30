@@ -49,10 +49,6 @@ public:
         m_dispatch.writeStream->close();
     }
 
-    void wsReceivedBinary(itlib::span<uint8_t> binary) override {
-        AC_JALOG(Warning, "Received binary with size ", binary.size(), ". Ignoring");
-    }
-
     void tryWriteToLocalSession() {
         while (true) {
             if (m_received.empty()) {
@@ -75,14 +71,35 @@ public:
         }
     }
 
-    void wsReceivedText(itlib::span<char> text) override {
+    template <typename T>
+    void received(itlib::span<T> span) {
         auto& frame = m_received.emplace_back();
 
-        m_cvt.jsonBufToAc(frame, std::string_view(text.data(), text.size()));
+        try {
+            if constexpr (std::is_same_v<T, char>) {
+                m_cvt.jsonBufToAc(frame, { span.data(), span.size() });
+            }
+            else {
+                m_cvt.cborBufToAc(frame, { span.data(), span.size() });
+            }
+        }
+        catch (std::exception& ex) {
+            AC_JALOG(Error, "Error reading frame: ", ex.what());
+            wsClose();
+            return;
+        }
 
         if (m_received.size() == 1) {
             tryWriteToLocalSession();
         }
+    }
+
+    void wsReceivedText(itlib::span<char> text) override {
+        received(text);
+    }
+
+    void wsReceivedBinary(itlib::span<uint8_t> binary) override {
+        received(binary);
     }
 
     void tryReadFromLocalSession() {
