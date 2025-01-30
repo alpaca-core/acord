@@ -103,58 +103,50 @@ public:
     }
 
     void tryReadFromLocalSession() {
-        bool alsoSend = m_sending.empty();
+        if (m_sending) return;
+        auto& buf = m_sending.emplace();
 
-        while (m_sending.size() < 2) {
-            auto& buf = m_sending.emplace_back();
-            ac::Frame frame;
-            auto res = m_dispatch.readStream->read(frame, [this] {
-                return [this, pl = shared_from_this()] {
-                    postWSIOTask([this]() {
-                        tryReadFromLocalSession();
-                    });
-                };
-            });
+        ac::Frame frame;
+        auto res = m_dispatch.readStream->read(frame, [this] {
+            return [this, pl = shared_from_this()] {
+                postWSIOTask([this]() {
+                    tryReadFromLocalSession();
+                });
+            };
+        });
 
-            if (res.success()) {
-                m_cvt.fromAcFrame(buf, frame);
-                continue;
-            }
-
-            m_sending.pop_back();
-            if (res.closed()) {
-                wsClose();
-            }
-            assert(res.closed() || res.blocked());
-            break;
-        }
-
-        if (alsoSend) {
+        if (res.success()) {
+            m_cvt.fromAcFrame(buf, frame);
             doSend();
+            return;
         }
+
+        m_sending.reset();
+
+        if (res.closed()) {
+            wsClose();
+        }
+
+        assert(res.closed() || res.blocked());
     }
 
     void doSend() {
-        if (m_sending.empty()) return;
-        auto& data = m_sending.front();
-        if (data.binary()) {
-            wsSend(data.binaryBuf);
+        assert(!!m_sending);
+        if (m_sending->text()) {
+            wsSend(m_sending->textBuf);
         }
         else {
-            wsSend(data.textBuf);
+            wsSend(m_sending->binaryBuf);
         }
     }
 
     void wsCompletedSend() override {
-        m_sending.pop_front();
-        if (m_sending.size() < 2) {
-            tryReadFromLocalSession();
-        }
-        doSend();
+        m_sending.reset();
+        tryReadFromLocalSession();
     }
 
     std::deque<ac::Frame> m_received;
-    std::deque<acord::Frame> m_sending;
+    std::optional<acord::Frame> m_sending;
 };
 
 } // namespace
