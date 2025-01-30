@@ -5,8 +5,6 @@
 #include <doctest/doctest.h>
 
 TEST_CASE("json") {
-    auto cvt = acord::FrameCvt::json();
-
     acord::Frame af;
 
     {
@@ -17,12 +15,14 @@ TEST_CASE("json") {
                 {"key2", 42}
             }
         };
-        cvt.fromAcFrame(af, f);
+        acord::FrameCvt::jsonFrameFromAc(af, f);
     }
+
+    CHECK(af.text());
 
     {
         ac::Frame f;
-        cvt.toAcFrame(f, af);
+        acord::FrameCvt::jsonBufToAc(f, af.textBuffer);
         CHECK(f.op == "some op");
         CHECK(f.data.size() == 2);
         CHECK(f.data["key1"].get<std::string_view>() == "value1");
@@ -30,12 +30,7 @@ TEST_CASE("json") {
     }
 }
 
-TEST_CASE("cbor") {
-    auto cvt = acord::FrameCvt::cbor();
-
-    ac::Blob init{1, 2, 3};
-    auto idata = init.data();
-
+TEST_CASE("binary") {
     acord::Frame af;
     {
         ac::Frame f = {
@@ -43,15 +38,17 @@ TEST_CASE("cbor") {
             ac::Dict{
                 {"key1", "value1"},
                 {"key2", 42},
-                {"blob", ac::Dict::binary(std::move(init))}
+                {"blob", ac::Dict::binary({1, 2, 3})}
             }
         };
-        cvt.fromAcFrame(af, f);
+        acord::FrameCvt::cborFrameFromAc(af, f);
     }
+
+    CHECK(af.binary());
 
     {
         ac::Frame f;
-        cvt.toAcFrame(f, af);
+        acord::FrameCvt::cborBufToAc(f, af.binaryBuffer);
         CHECK(f.op == "some op");
         CHECK(f.data.size() == 3);
         CHECK(f.data["key1"].get<std::string_view>() == "value1");
@@ -60,6 +57,13 @@ TEST_CASE("cbor") {
         CHECK(jblob.is_binary());
         ac::Blob& blob = jblob.get_binary();
         CHECK(blob == ac::Blob{1, 2, 3});
-        CHECK(blob.data() == idata); // all moves
     }
+}
+
+TEST_CASE("generic") {
+    auto cvt = acord::FrameCvt::json();
+    CHECK(cvt.fromAcFrame == acord::FrameCvt::jsonFrameFromAc);
+
+    cvt = acord::FrameCvt::cbor();
+    CHECK(cvt.fromAcFrame == acord::FrameCvt::cborFrameFromAc);
 }

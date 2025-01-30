@@ -4,6 +4,7 @@
 #pragma once
 #include "Frame.hpp"
 #include <ac/Frame.hpp>
+#include <span>
 
 namespace acord {
 
@@ -24,37 +25,42 @@ inline void jsonToAc(ac::Frame& out, ac::Dict& in) {
 
 }
 
-struct FrameCvtJson {
-    static void to(ac::Frame& out, Frame& in) {
-        auto json = ac::Dict::parse(in.textBuffer);
-        cvt::jsonToAc(out, json);
-    }
-    static void from(Frame& out, ac::Frame& in) {
-        auto json = cvt::acToJson(in);
-        out.textBuffer = json.dump();
-    }
-};
-
-struct FrameCvtCbor {
-    static void to(ac::Frame& out, Frame& in) {
-        auto json = ac::Dict::from_cbor(in.binaryBuffer);
-        cvt::jsonToAc(out, json);
-    }
-    static void from(Frame& out, ac::Frame& in) {
-        auto json = cvt::acToJson(in);
-        out.binaryBuffer = ac::Dict::to_cbor(json);
-    }
-};
-
 struct FrameCvt {
-    void (*toAcFrame)(ac::Frame& out, Frame& in) = nullptr;
     void (*fromAcFrame)(Frame& out, ac::Frame& in) = nullptr;
 
+    static void jsonBufFromAc(std::string& out, ac::Frame& in) {
+        auto json = cvt::acToJson(in);
+        out = json.dump();
+    }
+
+    static void jsonBufToAc(ac::Frame& out, std::string_view in) {
+        auto json = ac::Dict::parse(in);
+        cvt::jsonToAc(out, json);
+    }
+
+    static void cborBufFromAc(std::vector<uint8_t>& out, ac::Frame& in) {
+        auto json = cvt::acToJson(in);
+        out = ac::Dict::to_cbor(json);
+    }
+
+    static void cborBufToAc(ac::Frame& out, std::span<uint8_t> in) {
+        auto json = ac::Dict::from_cbor(in);
+        cvt::jsonToAc(out, json);
+    }
+
+    static void jsonFrameFromAc(Frame& out, ac::Frame& in) {
+        jsonBufFromAc(out.textBuffer, in);
+    }
+
+    static void cborFrameFromAc(Frame& out, ac::Frame& in) {
+        cborBufFromAc(out.binaryBuffer, in);
+    }
+
     static FrameCvt json() {
-        return {FrameCvtJson::to, FrameCvtJson::from};
+        return {jsonFrameFromAc};
     }
     static FrameCvt cbor() {
-        return {FrameCvtCbor::to, FrameCvtCbor::from};
+        return {cborFrameFromAc};
     }
 };
 
