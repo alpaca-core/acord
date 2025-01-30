@@ -17,6 +17,8 @@ include(init_ac_prj)
 include(ac_build_prj_util)
 
 option(ACORD_BUILD_TESTS "${PROJECT_NAME}: build tests" ${testsDefault})
+option(ACORD_BUILD_EXAMPLES "${PROJECT_NAME}: build examples" ${examplesDefault})
+mark_as_advanced(ACORD_BUILD_TESTS ACORD_BUILD_EXAMPLES)
 
 #######################################
 # packages
@@ -44,3 +46,7 @@ endif()
 # subdirs / targets
 add_subdirectory(common)
 add_subdirectory(server)
+add_subdirectory(client)
+if(ACORD_BUILD_EXAMPLES)
+    add_subdirectory(example)
+endif()
