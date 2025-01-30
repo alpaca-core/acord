@@ -16,10 +16,17 @@ include(./get-ac-build.cmake)
 include(init_ac_prj)
 include(ac_build_prj_util)
 
+option(ACORD_BUILD_TESTS "${PROJECT_NAME}: build tests" ${testsDefault})
+
 #######################################
 # packages
 
 add_ac_local(0.1.9)
+
+if(ACORD_BUILD_TESTS)
+    ac_dep(doctest-util)
+endif()
+
 ac_dep(fishnets)
 
 #######################################
@@ -35,5 +42,5 @@ endif()
 
 #######################################
 # subdirs / targets
-
+add_subdirectory(common)
 add_subdirectory(server)
