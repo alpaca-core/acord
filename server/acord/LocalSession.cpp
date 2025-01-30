@@ -7,6 +7,7 @@
 
 #include <ac/jalog/Log.hpp>
 
+namespace acord::server {
 namespace {
 ac::frameio::SessionCoro<void> localSession() {
     auto io = co_await ac::frameio::coro::Io{};
@@ -29,3 +30,4 @@ ac::frameio::SessionHandlerPtr LocalSessionFactory::createHandler() {
     // return ac::frameio::CoroSessionHandler::create(localSession());
     return ac::local::Lib::createSessionHandler("foo");
 }
+} // namespace acord::server

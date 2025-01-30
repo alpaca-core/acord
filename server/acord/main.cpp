@@ -17,6 +17,8 @@
 #include "aclp-out-dir.h"
 #endif
 
+using namespace acord::server;
+
 int main() {
     ac::jalog::Instance jl;
     jl.setup().add<ac::jalog::sinks::DefaultSink>();

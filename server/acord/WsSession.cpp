@@ -16,6 +16,7 @@
 #include <astl/shared_from.hpp>
 #include <deque>
 
+namespace acord::server {
 namespace {
 
 class WsSession final : public fishnets::WebSocketSession, public astl::enable_shared_from {
@@ -140,3 +141,4 @@ public:
 fishnets::WebSocketSessionPtr makeWsSession(const AppCtx& ctx) {
     return std::make_shared<WsSession>(ctx);
 }
+} // namespace acord::server
