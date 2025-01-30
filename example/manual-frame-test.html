@@ -56,11 +56,15 @@ function wsSendBinary() {
 </script>
 </head>
 <body style="font-family: sans-serif; font-size: 1.5em">
-    <h1>Echo</h1>
+    <h1>Manual Frame Writer</h1>
 
-    <input style="font-size: 1.3em" type="text" id="data_to_send" value="{&quot;op&quot;: &quot;xx&quot;, &quot;data&quot;: {}}">
-    <button style="font-size: 1.3em" id="sender" onClick="wsSend()">Send</button>
-    <button style="font-size: 1.3em" id="sender_binary" onClick="wsSendBinary()">Send Binary</button>
+    <div style="margin: 10px 0">
+        <input style="font-size: 1.3em; width: 90%" type="text" id="data_to_send" value="{&quot;op&quot;: &quot;xx&quot;, &quot;data&quot;: {}}">
+    </div>
+    <div>
+        <button style="font-size: 1.3em" id="sender" onClick="wsSend()">Send</button>
+        <button style="font-size: 1.3em" id="sender_binary" onClick="wsSendBinary()">Send Binary</button>
+    </div>
 
     <div id="output"></div>
 </body>
