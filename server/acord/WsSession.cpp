@@ -5,6 +5,8 @@
 #include "LocalSession.hpp"
 #include "AppCtx.hpp"
 
+#include <acord/FrameCvt.hpp>
+
 #include <fishnets/WebSocketSession.hpp>
 
 #include <ac/frameio/local/LocalIoCtx.hpp>
@@ -23,6 +25,8 @@ class WsSession final : public fishnets::WebSocketSession, public astl::enable_s
     const AppCtx& m_appCtx;
 
     ac::frameio::StreamEndpoint m_dispatch;
+
+    FrameCvt m_cvt = FrameCvt::json();
 public:
     WsSession(const AppCtx& ctx) : m_appCtx(ctx)
     {}
@@ -74,9 +78,7 @@ public:
     void wsReceivedText(itlib::span<char> text) override {
         auto& frame = m_received.emplace_back();
 
-        auto json = ac::Dict::parse(text.begin(), text.end());
-        frame.op = json["op"].get<std::string>();
-        frame.data = std::move(json["data"]);
+        m_cvt.jsonBufToAc(frame, std::string_view(text.data(), text.size()));
 
         if (m_received.size() == 1) {
             tryWriteToLocalSession();
@@ -98,10 +100,7 @@ public:
             });
 
             if (res.success()) {
-                ac::Dict json;
-                json["op"] = std::move(frame.op);
-                json["data"] = std::move(frame.data);
-                buf = json.dump();
+                m_cvt.fromAcFrame(buf, frame);
                 continue;
             }
 
@@ -121,7 +120,12 @@ public:
     void doSend() {
         if (m_sending.empty()) return;
         auto& data = m_sending.front();
-        wsSend(data);
+        if (data.binary()) {
+            wsSend(data.binaryBuffer);
+        }
+        else {
+            wsSend(data.textBuffer);
+        }
     }
 
     void wsCompletedSend() override {
@@ -133,7 +137,7 @@ public:
     }
 
     std::deque<ac::Frame> m_received;
-    std::deque<std::string> m_sending;
+    std::deque<acord::Frame> m_sending;
 };
 
 } // namespace

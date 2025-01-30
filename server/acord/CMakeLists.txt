@@ -10,6 +10,7 @@ add_executable(acord
 )
 
 target_link_libraries(acord PRIVATE
+    acord::common
     ac::local
     ac::jalog
     fishnets::fishnets
