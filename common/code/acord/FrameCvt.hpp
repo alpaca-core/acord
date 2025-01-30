@@ -49,11 +49,11 @@ struct FrameCvt {
     }
 
     static void jsonFrameFromAc(Frame& out, ac::Frame& in) {
-        jsonBufFromAc(out.textBuffer, in);
+        jsonBufFromAc(out.textBuf, in);
     }
 
     static void cborFrameFromAc(Frame& out, ac::Frame& in) {
-        cborBufFromAc(out.binaryBuffer, in);
+        cborBufFromAc(out.binaryBuf, in);
     }
 
     static FrameCvt json() {

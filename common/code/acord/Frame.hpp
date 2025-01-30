@@ -10,11 +10,11 @@ namespace acord {
 struct Frame {
     // if text is not empty, data is assumed to be text and binary is disregarded
     // if text is empty, data is assumed to be binary (even if binary is empty)
-    std::string textBuffer;
-    std::vector<uint8_t> binaryBuffer;
+    std::string textBuf;
+    std::vector<uint8_t> binaryBuf;
 
     bool text() const noexcept {
-        return !textBuffer.empty();
+        return !textBuf.empty();
     }
 
     bool binary() const noexcept {
@@ -22,11 +22,11 @@ struct Frame {
     }
 
     size_t size() const noexcept {
-        return text() ? textBuffer.size() : binaryBuffer.size();
+        return text() ? textBuf.size() : binaryBuf.size();
     }
 
     bool empty() const noexcept {
-        return textBuffer.empty() && binaryBuffer.empty();
+        return textBuf.empty() && binaryBuf.empty();
     }
 };
 

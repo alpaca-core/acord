@@ -22,7 +22,7 @@ TEST_CASE("json") {
 
     {
         ac::Frame f;
-        acord::FrameCvt::jsonBufToAc(f, af.textBuffer);
+        acord::FrameCvt::jsonBufToAc(f, af.textBuf);
         CHECK(f.op == "some op");
         CHECK(f.data.size() == 2);
         CHECK(f.data["key1"].get<std::string_view>() == "value1");
@@ -48,7 +48,7 @@ TEST_CASE("binary") {
 
     {
         ac::Frame f;
-        acord::FrameCvt::cborBufToAc(f, af.binaryBuffer);
+        acord::FrameCvt::cborBufToAc(f, af.binaryBuf);
         CHECK(f.op == "some op");
         CHECK(f.data.size() == 3);
         CHECK(f.data["key1"].get<std::string_view>() == "value1");

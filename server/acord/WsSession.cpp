@@ -77,10 +77,10 @@ public:
 
         try {
             if constexpr (std::is_same_v<T, char>) {
-                m_cvt.jsonBufToAc(frame, { span.data(), span.size() });
+                m_cvt.jsonBufToAc(frame, {span.data(), span.size()});
             }
             else {
-                m_cvt.cborBufToAc(frame, { span.data(), span.size() });
+                m_cvt.cborBufToAc(frame, {span.data(), span.size()});
             }
         }
         catch (std::exception& ex) {
@@ -138,10 +138,10 @@ public:
         if (m_sending.empty()) return;
         auto& data = m_sending.front();
         if (data.binary()) {
-            wsSend(data.binaryBuffer);
+            wsSend(data.binaryBuf);
         }
         else {
-            wsSend(data.textBuffer);
+            wsSend(data.textBuf);
         }
     }
 
