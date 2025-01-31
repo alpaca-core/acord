@@ -5,7 +5,7 @@
 #include "LocalSession.hpp"
 #include "AppCtx.hpp"
 
-#include <acord/FrameCvt.hpp>
+#include <acord/CommonWsSession.hpp>
 
 #include <fishnets/WebSocketSession.hpp>
 
@@ -21,12 +21,8 @@
 namespace acord::server {
 namespace {
 
-class WsSession final : public fishnets::WebSocketSession, public astl::enable_shared_from {
+class WsSession final : public CommonWsSession {
     const AppCtx& m_appCtx;
-
-    ac::frameio::StreamEndpoint m_dispatch;
-
-    FrameCvt m_cvt = FrameCvt::json();
 public:
     WsSession(const AppCtx& ctx) : m_appCtx(ctx)
     {}
