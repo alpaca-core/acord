@@ -6,6 +6,7 @@ add_library(acord::common ALIAS acord-common)
 
 target_sources(acord-common
     INTERFACE FILE_SET HEADERS FILES
+        acord/api.h
         acord/Frame.hpp
         acord/FrameCvt.hpp
         acord/CommonWsSession.hpp
