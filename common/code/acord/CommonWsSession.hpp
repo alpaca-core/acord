@@ -12,7 +12,7 @@
 
 namespace acord {
 
-class ACORD_COMMON_EXPORT CommonWsSession : public fishnets::WebSocketSession, public astl::enable_shared_from {
+class ACORD_COMMON_API CommonWsSession : public fishnets::WebSocketSession, public astl::enable_shared_from {
 protected:
     ~CommonWsSession();
     FrameCvt m_cvt = FrameCvt::json();

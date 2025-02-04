@@ -6,10 +6,10 @@
 
 #if ACORD_CLIENT_SHARED
 #   if BUILDING_ACORD_CLIENT
-#       define ACORD_CLIENT_EXPORT SYMBOL_EXPORT
+#       define ACORD_CLIENT_API SYMBOL_EXPORT
 #   else
-#       define ACORD_CLIENT_EXPORT SYMBOL_IMPORT
+#       define ACORD_CLIENT_API SYMBOL_IMPORT
 #   endif
 #else
-#   define ACORD_CLIENT_EXPORT
+#   define ACORD_CLIENT_API
 #endif

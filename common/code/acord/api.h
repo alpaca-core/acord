@@ -6,10 +6,10 @@
 
 #if ACORD_COMMON_SHARED
 #   if BUILDING_ACORD_COMMON
-#       define ACORD_COMMON_EXPORT SYMBOL_EXPORT
+#       define ACORD_COMMON_API SYMBOL_EXPORT
 #   else
-#       define ACORD_COMMON_EXPORT SYMBOL_IMPORT
+#       define ACORD_COMMON_API SYMBOL_IMPORT
 #   endif
 #else
-#   define ACORD_COMMON_EXPORT
+#   define ACORD_COMMON_API
 #endif
