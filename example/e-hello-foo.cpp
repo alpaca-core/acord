@@ -37,7 +37,7 @@ int main() try {
     io.expectState<schema::StateInstance>();
     auto result = io.call<schema::StateInstance::OpRun>({
         .input = std::vector<std::string>{"a", "b", "c"}
-        });
+    });
     std::cout << result.result.value() << std::endl;
 
     return 0;

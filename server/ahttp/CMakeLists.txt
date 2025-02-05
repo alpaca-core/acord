@@ -20,11 +20,13 @@ target_link_libraries(ahttp
         furi::furi
         Boost::beast
 )
-add_library(ac::http ALIAS ahttp)
+add_library(acord::http ALIAS ahttp)
 
 if(TARGET OpenSSL::SSL)
     target_compile_definitions(ahttp PUBLIC AHTTP_SSL=1)
     target_link_libraries(ahttp PRIVATE OpenSSL::SSL)
 endif()
 
-ac_add_test_subdir()
+if(ACORD_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
