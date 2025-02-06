@@ -18,10 +18,10 @@ int main() try {
     ac::jalog::Instance jl;
     jl.setup().add<ac::jalog::sinks::DefaultSink>();
 
-    auto cl2r = ac::frameio::LocalBufferedChannel_create(10);
-    auto cr2l = ac::frameio::LocalBufferedChannel_create(10);
-
-    auto [local, remote] = LocalChannel_getEndpoints(cl2r, cr2l);
+    auto [local, remote] = LocalChannel_getEndpoints(
+        ac::frameio::LocalBufferedChannel_create(10),
+        ac::frameio::LocalBufferedChannel_create(10)
+    );
 
     acord::client::Connection con;
     con.initiate("localhost", 7654, std::move(remote));

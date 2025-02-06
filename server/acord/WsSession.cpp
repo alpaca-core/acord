@@ -24,10 +24,11 @@ public:
 
     void wsOpened() override {
         AC_JALOG(Info, "Session opened");
-        auto ca = ac::frameio::LocalBufferedChannel_create(10);
-        auto cb = ac::frameio::LocalBufferedChannel_create(10);
+        auto [local, remote] = LocalChannel_getEndpoints(
+            ac::frameio::LocalBufferedChannel_create(10),
+            ac::frameio::LocalBufferedChannel_create(10)
+        );
 
-        auto [local, remote] = ac::frameio::LocalChannel_getEndpoints(ca, cb);
         m_dispatch = std::move(local);
         m_appCtx.io.connect(m_appCtx.sessionFactory.createHandler(), std::move(remote));
 

@@ -23,7 +23,7 @@ mark_as_advanced(ACORD_BUILD_TESTS ACORD_BUILD_EXAMPLES)
 #######################################
 # packages
 
-add_ac_local(0.1.10)
+add_ac_local(0.1.11)
 
 if(ACORD_BUILD_TESTS)
     ac_dep(doctest-util)
