@@ -27,6 +27,4 @@ if(TARGET OpenSSL::SSL)
     target_link_libraries(ahttp PRIVATE OpenSSL::SSL)
 endif()
 
-if(ACORD_BUILD_TESTS)
-    add_subdirectory(test)
-endif()
+acord_add_test_subdir()

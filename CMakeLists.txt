@@ -20,6 +20,12 @@ option(ACORD_BUILD_TESTS "${PROJECT_NAME}: build tests" ${testsDefault})
 option(ACORD_BUILD_EXAMPLES "${PROJECT_NAME}: build examples" ${examplesDefault})
 mark_as_advanced(ACORD_BUILD_TESTS ACORD_BUILD_EXAMPLES)
 
+macro(acord_add_test_subdir)
+    if(ACORD_BUILD_TESTS)
+        add_subdirectory(test)
+    endif()
+endmacro()
+
 #######################################
 # packages
 
