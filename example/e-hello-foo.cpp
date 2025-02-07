@@ -12,11 +12,20 @@
 
 #include <iostream>
 
+#define SAME_PROCESS_SERVER 1
+#if SAME_PROCESS_SERVER
+#include <acord/server/AppRunner.hpp>
+#endif
+
 namespace schema = ac::schema::foo;
 
 int main() try {
     ac::jalog::Instance jl;
     jl.setup().add<ac::jalog::sinks::DefaultSink>();
+
+#if SAME_PROCESS_SERVER
+    acord::server::AppRunner appRunner;
+#endif
 
     auto [local, remote] = LocalChannel_getEndpoints(
         ac::frameio::LocalBufferedChannel_create(10),

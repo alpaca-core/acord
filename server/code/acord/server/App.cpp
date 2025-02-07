@@ -15,6 +15,8 @@
 #include <ac/jalog/Instance.hpp>
 #include <ac/jalog/sinks/DefaultSink.hpp>
 
+#include <ac/frameio/local/LocalIoCtx.hpp>
+
 #include <fishnets/WebSocketServer.hpp>
 
 #ifdef HAVE_ACLP_OUT_DIR
@@ -23,27 +25,37 @@
 
 namespace acord::server {
 
-void App::run(uint16_t wsPort) {
-#ifdef HAVE_ACLP_OUT_DIR
-    ac::local::Lib::addPluginDir(ACLP_OUT_DIR);
-#endif
-
-    ac::local::Lib::loadAllPlugins();
-
+struct App::Impl {
     ac::frameio::LocalIoCtx io;
     AssetMgr assetMgr;
     LocalSessionFactory sessionFactory{ assetMgr };
     AppCtx ctx{io, sessionFactory};
+    fishnets::WebSocketServer server;
 
-    fishnets::WebSocketServer server([&](const fishnets::WebSocketEndpointInfo&) {
-        return makeWsSession(ctx);
-    }, wsPort, 3, nullptr);
+    Impl(uint16_t wsPort)
+        : server([&](const fishnets::WebSocketEndpointInfo&) {
+            return makeWsSession(ctx);
+        }, wsPort, 3, nullptr)
+    {
+#ifdef HAVE_ACLP_OUT_DIR
+        ac::local::Lib::addPluginDir(ACLP_OUT_DIR);
+#endif
+        ac::local::Lib::loadAllPlugins();
+    }
+};
 
-    io.run();
+App::App(uint16_t wsPort)
+    : m_impl(std::make_unique<Impl>(wsPort))
+{}
+
+App::~App() = default;
+
+void App::run() {
+    m_impl->io.run();
 }
 
 void App::stop() {
-    m_ioCtx.forceStop();
+    m_impl->io.forceStop();
 }
 
 } // namespace acord::server

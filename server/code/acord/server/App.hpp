@@ -4,18 +4,26 @@
 #pragma once
 #include "api.h"
 #include "DefaultPort.hpp"
-#include <ac/frameio/local/LocalIoCtx.hpp>
+#include <memory>
 
 namespace acord::server {
 
-struct ACORD_SERVER_API App {
-    ac::frameio::LocalIoCtx m_ioCtx;
+class ACORD_SERVER_API App {
+public:
+    App(uint16_t wsPort = Default_WsPort);
+    ~App();
+
+    App(const App&) = delete;
+    App& operator=(const App&) = delete;
 
     // block current thread
-    void run(uint16_t wsPort = Default_WsPort);
+    void run();
 
     // safe on any thread
     void stop();
+private:
+    struct Impl;
+    std::unique_ptr<Impl> m_impl;
 };
 
 } // namespace acord::server

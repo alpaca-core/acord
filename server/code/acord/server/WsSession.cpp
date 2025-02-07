@@ -4,14 +4,13 @@
 #include "WsSession.hpp"
 #include "LocalSession.hpp"
 #include "AppCtx.hpp"
+#include "Logging.hpp"
 
 #include <acord/CommonWsSession.hpp>
 
 #include <ac/frameio/local/LocalIoCtx.hpp>
 #include <ac/frameio/local/LocalBufferedChannel.hpp>
 #include <ac/frameio/local/LocalChannelUtil.hpp>
-
-#include <ac/jalog/Log.hpp>
 
 namespace acord::server {
 namespace {
@@ -23,7 +22,7 @@ public:
     {}
 
     void wsOpened() override {
-        AC_JALOG(Info, "Session opened");
+        ACORD_SRV_LOG(Info, "Session opened");
         auto [local, remote] = LocalChannel_getEndpoints(
             ac::frameio::LocalBufferedChannel_create(10),
             ac::frameio::LocalBufferedChannel_create(10)
