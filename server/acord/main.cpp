@@ -5,6 +5,8 @@
 #include "LocalSession.hpp"
 #include "AppCtx.hpp"
 
+#include <acord/asset/Manager.hpp>
+
 #include <ac/local/Lib.hpp>
 #include <ac/frameio/local/LocalIoCtx.hpp>
 
@@ -30,7 +32,8 @@ int main() {
     ac::local::Lib::loadAllPlugins();
 
     ac::frameio::LocalIoCtx io;
-    LocalSessionFactory sessionFactory;
+    acord::asset::Manager assetMgr;
+    LocalSessionFactory sessionFactory{assetMgr};
     AppCtx ctx{io, sessionFactory};
 
     fishnets::WebSocketServer server([&](const fishnets::WebSocketEndpointInfo&) {
