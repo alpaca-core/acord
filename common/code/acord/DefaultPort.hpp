@@ -4,6 +4,6 @@
 #pragma once
 #include <cstdint>
 
-namespace acord::server {
+namespace acord {
 constexpr uint16_t Default_WsPort = 7654;
 } // namespace acord::server

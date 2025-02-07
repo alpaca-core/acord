@@ -26,6 +26,7 @@ target_sources(acord-server PRIVATE
 
     acord/server/App.hpp
     acord/server/App.cpp
+    acord/server/AppRunner.hpp
 )
 
 target_include_directories(acord-server INTERFACE .)

@@ -1,4 +1,5 @@
 #include <acord/client/Connection.hpp>
+#include <acord/DefaultPort.hpp>
 
 #include <ac/frameio/local/LocalChannelUtil.hpp>
 #include <ac/frameio/local/LocalBufferedChannel.hpp>
@@ -33,7 +34,7 @@ int main() try {
     );
 
     acord::client::Connection con;
-    con.initiate("localhost", 7654, std::move(remote));
+    con.initiate("localhost", acord::Default_WsPort, std::move(remote));
 
     ac::schema::BlockingIoHelper io(ac::frameio::BlockingIo(std::move(local)));
 
