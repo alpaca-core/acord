@@ -23,6 +23,21 @@ struct State {
         using Return = std::vector<std::string>;
     };
 
+    struct OpLoadProvider {
+        static constexpr auto id = "load_provider";
+        static constexpr auto desc = "Load provider";
+
+        struct Params {
+            Field<std::string> name;
+
+            template <typename Visitor>
+            void visitFields(Visitor& v) {
+                v(name, "name", "provider name");
+            }
+        };
+        using Return = nullptr_t;
+    };
+
     struct StreamProgress {
         static constexpr auto id = "progress";
         static constexpr auto desc = "Progress stream";
@@ -39,7 +54,7 @@ struct State {
         };
     };
 
-    using Ops = std::tuple<OpMakeAssetsAvailable>;
+    using Ops = std::tuple<OpMakeAssetsAvailable, OpLoadProvider>;
     using Ins = std::tuple<>;
     using Outs = std::tuple<StreamProgress>;
 };

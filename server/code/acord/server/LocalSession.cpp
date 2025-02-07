@@ -33,7 +33,7 @@ ac::frameio::SessionCoro<void> Acord_makeAssetsAvailable(coro::Io& io, std::vect
     co_await io.pushFrame(std::move(result.frame));
 }
 
-ac::frameio::SessionCoro<void> Acord_run(AssetMgr& assetMgr) {
+ac::frameio::SessionCoro<ac::frameio::SessionHandlerPtr> Acord_run(AssetMgr& assetMgr) {
     try {
         auto io = co_await coro::Io{};
 
@@ -48,19 +48,32 @@ ac::frameio::SessionCoro<void> Acord_run(AssetMgr& assetMgr) {
                     assetMgr
                 );
             }
+            else if (f.frame.op == Schema::OpLoadProvider::id) {
+                std::string error;
+                try {
+                    auto name = ac::schema::Struct_fromDict<Schema::OpLoadProvider::Params>(std::move(f.frame.data)).name;
+                    auto next = ac::local::Lib::createSessionHandler("foo");
+                    co_await io.pushFrame({Schema::OpLoadProvider::id, {}});
+                    co_return next;
+                }
+                catch (std::exception& e) {
+                    error = e.what();
+                }
+                co_await io.pushFrame({"error", std::move(error)});
+            }
             else {
                 co_await io.pushFrame({"error", "Unknown op: " + f.frame.op});
             }
         }
     }
     catch (ac::frameio::IoClosed&) {
-        co_return;
+        co_return {};
     }
 }
 } // namespace
 
 ac::frameio::SessionHandlerPtr LocalSessionFactory::createHandler() {
     return ac::frameio::CoroSessionHandler::create(Acord_run(assetMgr));
-    // return ac::local::Lib::createSessionHandler("foo");
+    // ;
 }
 } // namespace acord::server

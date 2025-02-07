@@ -1,5 +1,6 @@
 #include <acord/client/Connection.hpp>
 #include <acord/DefaultPort.hpp>
+#include <acord/schema/Acord.hpp>
 
 #include <ac/frameio/local/LocalChannelUtil.hpp>
 #include <ac/frameio/local/LocalBufferedChannel.hpp>
@@ -18,7 +19,8 @@
 #include <acord/server/AppRunner.hpp>
 #endif
 
-namespace schema = ac::schema::foo;
+namespace acrd = ac::schema::acord;
+namespace foo = ac::schema::foo;
 
 int main() try {
     ac::jalog::Instance jl;
@@ -38,15 +40,25 @@ int main() try {
 
     ac::schema::BlockingIoHelper io(ac::frameio::BlockingIo(std::move(local)));
 
-    io.expectState<schema::StateInitial>();
-    io.call<schema::StateInitial::OpLoadModel>({});
+    io.expectState<acrd::State>();
+    auto files = io.call<acrd::State::OpMakeAssetsAvailable>(
+        std::vector<std::string>{"https://raw.githubusercontent.com/alpaca-core/test-data-foo/900479ceedddc6e3867c467bbedb7a5310414041/foo-large.txt"}
+    );
 
-    io.expectState<schema::StateModelLoaded>();
-    io.call<schema::StateModelLoaded::OpCreateInstance>({.cutoff = 2});
+    io.call<acrd::State::OpLoadProvider>({.name = "foo"});
 
-    io.expectState<schema::StateInstance>();
-    auto result = io.call<schema::StateInstance::OpRun>({
-        .input = std::vector<std::string>{"a", "b", "c"}
+    io.expectState<foo::StateInitial>();
+    io.call<foo::StateInitial::OpLoadModel>({
+        .filePath = std::move(files.front())
+    });
+
+    io.expectState<foo::StateModelLoaded>();
+    io.call<foo::StateModelLoaded::OpCreateInstance>({});
+
+    io.expectState<foo::StateInstance>();
+    auto result = io.call<foo::StateInstance::OpRun>({
+        .input = std::vector<std::string>{"JFK", "said", ":"},
+        .splice = false
     });
     std::cout << result.result.value() << std::endl;
 
