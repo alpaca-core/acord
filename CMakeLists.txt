@@ -9,12 +9,17 @@ project(acord
     LANGUAGES CXX
 )
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 include(./get-ac-build.cmake)
+
+CPMAddPackage(gh:iboB/icm@1.5.4)
+list(APPEND CMAKE_MODULE_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+    "${icm_SOURCE_DIR}"
+)
 
 include(init_ac_prj)
 include(ac_build_prj_util)
+include(icm_add_lib)
 
 option(ACORD_BUILD_TESTS "${PROJECT_NAME}: build tests" ${testsDefault})
 option(ACORD_BUILD_EXAMPLES "${PROJECT_NAME}: build examples" ${examplesDefault})
@@ -34,8 +39,6 @@ add_ac_local(0.1.11)
 if(ACORD_BUILD_TESTS)
     ac_dep(doctest-util)
 endif()
-
-ac_dep(fishnets)
 
 #######################################
 # plugins

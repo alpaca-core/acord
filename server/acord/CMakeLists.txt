@@ -3,15 +3,10 @@
 #
 add_executable(acord
     main.cpp
-    WsSession.hpp
-    WsSession.cpp
-    LocalSession.hpp
-    LocalSession.cpp
 )
 
 target_link_libraries(acord PRIVATE
     acord::server
-    ac::local
     ac::jalog
 )
 

@@ -3,7 +3,7 @@
 //
 #include "LocalSession.hpp"
 
-#include <acord/server/AssetMgr.hpp>
+#include "AssetMgr.hpp"
 
 #include <acord/schema/Acord.hpp>
 #include <ac/schema/FrameHelpers.hpp>

@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: MIT
 //
 #pragma once
+#include "api.h"
 #include <fishnets/WebSocketSessionPtr.hpp>
 
 namespace acord::server {
 struct AppCtx;
-fishnets::WebSocketSessionPtr makeWsSession(const AppCtx& ctx);
+[[nodiscard]] ACORD_SERVER_API fishnets::WebSocketSessionPtr makeWsSession(const AppCtx& ctx);
 } // namespace acord::server
