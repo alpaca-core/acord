@@ -24,6 +24,8 @@ target_sources(acord-server PRIVATE
     acord/server/WsSession.hpp
     acord/server/WsSession.cpp
 
+    acord/server/App.hpp
+    acord/server/App.cpp
 )
 
 target_include_directories(acord-server INTERFACE .)
@@ -38,3 +40,9 @@ target_link_libraries(acord-server
         acord::http
         Boost::asio
 )
+
+if(TARGET aclp::out-dir)
+    target_link_libraries(acord-server PRIVATE
+        aclp::out-dir
+    )
+endif()

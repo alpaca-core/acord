@@ -9,9 +9,3 @@ target_link_libraries(acord PRIVATE
     acord::server
     ac::jalog
 )
-
-if(TARGET aclp::out-dir)
-    target_link_libraries(acord PRIVATE
-        aclp::out-dir
-    )
-endif()
