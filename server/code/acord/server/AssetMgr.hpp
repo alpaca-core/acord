@@ -11,15 +11,15 @@ namespace ac::frameio {
 struct StreamEndpoint;
 }
 
-namespace acord::asset {
+namespace acord::server {
 
-class ACORD_ASSET_MGR_API Manager {
+class ACORD_SERVER_API AssetMgr {
 public:
-    Manager();
-    ~Manager();
+    AssetMgr();
+    ~AssetMgr();
 
-    Manager(const Manager&) = delete;
-    Manager& operator=(const Manager&) = delete;
+    AssetMgr(const AssetMgr&) = delete;
+    AssetMgr& operator=(const AssetMgr&) = delete;
 
     ac::frameio::StreamEndpoint makeAssetsAvailable(std::vector<std::string> assetUrls);
 private:
@@ -27,4 +27,4 @@ private:
     std::unique_ptr<Impl> m_impl;
 };
 
-} // namespace acord::asset
+} // namespace acord::server

@@ -11,7 +11,7 @@
 #   define stat _stat
 #endif
 
-namespace acord::asset::fs {
+namespace acord::server::fs {
 
 using ac::throw_ex;
 
@@ -124,4 +124,4 @@ void mv(std::string_view src, std::string_view tgt) {
     );
 }
 
-} // namespace ac::asset::fs
+} // namespace ac::server::fs

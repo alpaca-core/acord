@@ -5,8 +5,8 @@
 #include <ac/jalog/Scope.hpp>
 #include <ac/jalog/Log.hpp>
 
-namespace acord::asset::log {
+namespace acord::server::log {
 extern ac::jalog::Scope scope;
 }
 
-#define ACORD_ASSET_LOG(lvl, ...) AC_JALOG_SCOPE(::acord::asset::log::scope, lvl, __VA_ARGS__)
+#define ACORD_SRV_LOG(lvl, ...) AC_JALOG_SCOPE(::acord::server::log::scope, lvl, __VA_ARGS__)

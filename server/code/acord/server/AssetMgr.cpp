@@ -1,7 +1,7 @@
 // Copyright (c) Alpaca Core
 // SPDX-License-Identifier: MIT
 //
-#include "Manager.hpp"
+#include "AssetMgr.hpp"
 #include "FsUtil.hpp"
 #include "Logging.hpp"
 
@@ -22,9 +22,9 @@
 
 namespace asio = boost::asio;
 
-namespace acord::asset {
+namespace acord::server {
 
-struct Manager::Impl {
+struct AssetMgr::Impl {
     asio::io_context m_ctx;
     asio::strand<asio::io_context::executor_type> m_strand{m_ctx.get_executor()};
     std::thread m_thread;
@@ -59,7 +59,7 @@ struct Manager::Impl {
             // look for assets in local cache
             auto it = m_assetUrlToPath.find(url);
             if (it != m_assetUrlToPath.end()) {
-                ACORD_ASSET_LOG(Info, "Found asset '", url, "' in cache: ", it->second);
+                ACORD_SRV_LOG(Info, "Found asset '", url, "' in cache: ", it->second);
                 path = it->second;
                 continue;
             }
@@ -70,7 +70,7 @@ struct Manager::Impl {
             for (auto& dir : m_localDirs) {
                 auto localPath = dir + "/" + fname;
                 if (fs::basicStat(localPath).file()) {
-                    ACORD_ASSET_LOG(Info, "Found asset '", url, "' in local dir: ", localPath);
+                    ACORD_SRV_LOG(Info, "Found asset '", url, "' in local dir: ", localPath);
                     m_assetUrlToPath[url] = localPath;
                     path = localPath;
                     found = true;
@@ -85,7 +85,7 @@ struct Manager::Impl {
 
             std::ofstream ofs(dlPath, std::ios::binary);
             if (!ofs) {
-                ACORD_ASSET_LOG(Error, "Failed to open file for writing: ", dlPath);
+                ACORD_SRV_LOG(Error, "Failed to open file for writing: ", dlPath);
                 continue;
             }
 
@@ -99,18 +99,18 @@ struct Manager::Impl {
                 }
                 ofs.close();
 
-                ACORD_ASSET_LOG(Info, "Downloaded asset '", url, "' to: ", dlPath);
+                ACORD_SRV_LOG(Info, "Downloaded asset '", url, "' to: ", dlPath);
 
                 auto targetPath = m_localDirs.front() + "/" + fname;
                 fs::mv(dlPath, targetPath);
 
-                ACORD_ASSET_LOG(Info, "Moved temp file '", dlPath, "' to: ", targetPath);
+                ACORD_SRV_LOG(Info, "Moved temp file '", dlPath, "' to: ", targetPath);
 
                 m_assetUrlToPath[url] = targetPath;
                 path = targetPath;
             }
             catch (std::exception& e) {
-                ACORD_ASSET_LOG(Error, "Failed to download asset '", url, "': ", e.what());
+                ACORD_SRV_LOG(Error, "Failed to download asset '", url, "': ", e.what());
             }
         }
 
@@ -118,10 +118,10 @@ struct Manager::Impl {
     }
 };
 
-Manager::Manager() : m_impl(std::make_unique<Impl>()) {}
-Manager::~Manager() = default;
+AssetMgr::AssetMgr() : m_impl(std::make_unique<Impl>()) {}
+AssetMgr::~AssetMgr() = default;
 
-ac::frameio::StreamEndpoint Manager::makeAssetsAvailable(std::vector<std::string> assetUrls) {
+ac::frameio::StreamEndpoint AssetMgr::makeAssetsAvailable(std::vector<std::string> assetUrls) {
     auto [local, remote] = ac::frameio::LocalChannel_getEndpoints(
         ac::frameio::LocalBufferedChannel_create(5),
         ac::frameio::LocalBufferedChannel_create(5)
@@ -134,4 +134,4 @@ ac::frameio::StreamEndpoint Manager::makeAssetsAvailable(std::vector<std::string
     return std::move(remote);
 }
 
-} // namespace acord::asset
+} // namespace acord::server

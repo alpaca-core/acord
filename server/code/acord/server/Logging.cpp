@@ -3,6 +3,6 @@
 //
 #include "Logging.hpp"
 
-namespace acord::asset::log {
-ac::jalog::Scope scope("ac:asset");
+namespace acord::server::log {
+ac::jalog::Scope scope("acord:srv");
 }

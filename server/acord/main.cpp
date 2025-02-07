@@ -5,7 +5,7 @@
 #include "LocalSession.hpp"
 #include "AppCtx.hpp"
 
-#include <acord/asset/Manager.hpp>
+#include <acord/server/AssetMgr.hpp>
 
 #include <ac/local/Lib.hpp>
 #include <ac/frameio/local/LocalIoCtx.hpp>
@@ -32,7 +32,7 @@ int main() {
     ac::local::Lib::loadAllPlugins();
 
     ac::frameio::LocalIoCtx io;
-    acord::asset::Manager assetMgr;
+    AssetMgr assetMgr;
     LocalSessionFactory sessionFactory{assetMgr};
     AppCtx ctx{io, sessionFactory};
 

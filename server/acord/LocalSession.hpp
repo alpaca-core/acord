@@ -3,14 +3,10 @@
 //
 #pragma once
 #include <ac/frameio/SessionHandlerPtr.hpp>
-
-namespace acord::asset {
-class Manager;
-}
-
 namespace acord::server {
+class AssetMgr;
 struct LocalSessionFactory {
-    asset::Manager& assetMgr;
+    AssetMgr& assetMgr;
     ac::frameio::SessionHandlerPtr createHandler();
 };
 } // namespace acord::server

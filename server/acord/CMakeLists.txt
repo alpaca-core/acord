@@ -10,8 +10,7 @@ add_executable(acord
 )
 
 target_link_libraries(acord PRIVATE
-    acord::common
-    acord::asset-mgr
+    acord::server
     ac::local
     ac::jalog
 )

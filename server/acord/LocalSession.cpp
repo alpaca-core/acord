@@ -3,7 +3,7 @@
 //
 #include "LocalSession.hpp"
 
-#include <acord/asset/Manager.hpp>
+#include <acord/server/AssetMgr.hpp>
 
 #include <acord/schema/Acord.hpp>
 #include <ac/schema/FrameHelpers.hpp>
@@ -26,14 +26,14 @@ namespace {
 namespace coro = ac::frameio::coro;
 using Schema = ac::schema::acord::State;
 
-ac::frameio::SessionCoro<void> Acord_makeAssetsAvailable(coro::Io& io, std::vector<std::string> urls, asset::Manager& assetMgr) {
+ac::frameio::SessionCoro<void> Acord_makeAssetsAvailable(coro::Io& io, std::vector<std::string> urls, AssetMgr& assetMgr) {
     auto aio = io.attach(assetMgr.makeAssetsAvailable(std::move(urls)));
     auto result = co_await aio.pollFrame();
     result.frame.op = Schema::OpMakeAssetsAvailable::id;
     co_await io.pushFrame(std::move(result.frame));
 }
 
-ac::frameio::SessionCoro<void> Acord_run(asset::Manager& assetMgr) {
+ac::frameio::SessionCoro<void> Acord_run(AssetMgr& assetMgr) {
     try {
         auto io = co_await coro::Io{};
 
