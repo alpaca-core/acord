@@ -52,7 +52,8 @@ ac::frameio::SessionCoro<ac::frameio::SessionHandlerPtr> Acord_run(AssetMgr& ass
                 std::string error;
                 try {
                     auto name = ac::schema::Struct_fromDict<Schema::OpLoadProvider::Params>(std::move(f.frame.data)).name;
-                    auto next = ac::local::Lib::createSessionHandler("foo");
+                    assert(name.hasValue());
+                    auto next = ac::local::Lib::createSessionHandler(name.value());
                     co_await io.pushFrame({Schema::OpLoadProvider::id, {}});
                     co_return next;
                 }
