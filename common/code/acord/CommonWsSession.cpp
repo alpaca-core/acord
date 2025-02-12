@@ -9,37 +9,42 @@ namespace acord {
 
 CommonWsSession::~CommonWsSession() = default;
 
-void CommonWsSession::wsClosed() {
-    AC_JALOG(Info, "Session closed");
+void CommonWsSession::wsOpened(std::string_view target) {
+    AC_JALOG(Info, "Session opened: ", target);
+    wsReceive();
+}
+
+void CommonWsSession::wsClosed(std::string reason) {
+    AC_JALOG(Info, "Session closed: ", reason);
     m_dispatch.readStream->close();
     m_dispatch.writeStream->close();
 }
 
 void CommonWsSession::tryWriteToDispatch() {
-    while (true) {
-        if (m_received.empty()) {
-            return;
-        }
-        auto res = m_dispatch.writeStream->write(m_received.front(), [&] {
-            return [this, pl = shared_from_this()] {
-                postWSIOTask([this]() {
-                    tryWriteToDispatch();
-                });
-            };
-        });
-        if (res.blocked()) break;
-        if (res.closed()) {
-            wsClose();
-            return;
-        }
-        assert(res.success());
-        m_received.pop_front();
+    if (!m_receiving) {
+        return;
     }
+    auto res = m_dispatch.writeStream->write(*m_receiving, [&] {
+        return [this, pl = shared_from_this()] {
+            postWsIoTask([this, pl = shared_from_this()]() {
+                tryWriteToDispatch();
+            });
+        };
+    });
+    if (res.blocked()) return;
+    if (res.closed()) {
+        wsClose();
+        return;
+    }
+    assert(res.success());
+    m_receiving.reset();
+    wsReceive();
 }
 
 template <typename T>
 void CommonWsSession::received(itlib::span<T> span) {
-    auto& frame = m_received.emplace_back();
+    assert(!m_receiving);
+    auto& frame = m_receiving.emplace();
 
     try {
         if constexpr (std::is_same_v<T, char>) {
@@ -55,16 +60,14 @@ void CommonWsSession::received(itlib::span<T> span) {
         return;
     }
 
-    if (m_received.size() == 1) {
-        tryWriteToDispatch();
-    }
+    tryWriteToDispatch();
 }
 
-void CommonWsSession::wsReceivedText(itlib::span<char> text) {
+void CommonWsSession::wsReceivedText(itlib::span<char> text, bool) {
     received(text);
 }
 
-void CommonWsSession::wsReceivedBinary(itlib::span<uint8_t> binary) {
+void CommonWsSession::wsReceivedBinary(itlib::span<uint8_t> binary, bool) {
     received(binary);
 }
 
@@ -75,7 +78,7 @@ void CommonWsSession::tryReadFromDispatch() {
     ac::Frame frame;
     auto res = m_dispatch.readStream->read(frame, [this] {
         return [this, pl = shared_from_this()] {
-            postWSIOTask([this]() {
+            postWsIoTask([this, pl = shared_from_this()]() {
                 tryReadFromDispatch();
             });
         };

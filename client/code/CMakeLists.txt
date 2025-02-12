@@ -7,9 +7,9 @@ add_library(acord::client ALIAS acord-client)
 target_sources(acord-client
     INTERFACE FILE_SET HEADERS FILES
         acord/client/api.h
-        acord/client/Connection.hpp
+        acord/client/IoCtx.hpp
     PRIVATE
-        acord/client/Connection.cpp
+        acord/client/IoCtx.cpp
 )
 
 target_link_libraries(acord-client

@@ -5,31 +5,31 @@
 #include "api.h"
 #include "FrameCvt.hpp"
 #include <ac/frameio/StreamEndpoint.hpp>
-#include <fishnets/WebSocketSession.hpp>
-#include <astl/shared_from.hpp>
-#include <deque>
+#include <fishnets/util/WsSessionHandler.hpp>
 #include <optional>
 
 namespace acord {
 
-class ACORD_COMMON_API CommonWsSession : public fishnets::WebSocketSession, public astl::enable_shared_from {
+class ACORD_COMMON_API CommonWsSession : public fishnets::WsSessionHandler {
 protected:
     ~CommonWsSession();
     FrameCvt m_cvt = FrameCvt::json();
     ac::frameio::StreamEndpoint m_dispatch;
 
-    std::deque<ac::Frame> m_received;
+    std::optional<ac::Frame> m_receiving;
     std::optional<acord::Frame> m_sending;
 
-    void wsClosed() override; // not final (likely to be overridden further)
+    // not final (likely to be overridden further)
+    void wsOpened(std::string_view target) override;
+    void wsClosed(std::string reason) override;
 
     void tryWriteToDispatch();
 
     template <typename T>
     void received(itlib::span<T> span);
 
-    void wsReceivedText(itlib::span<char> text) final override;
-    void wsReceivedBinary(itlib::span<uint8_t> binary) final override;
+    void wsReceivedText(itlib::span<char> text, bool complete) final override;
+    void wsReceivedBinary(itlib::span<uint8_t> binary, bool complete) final override;
     void tryReadFromDispatch();
     void doSend();
     void wsCompletedSend() final override;

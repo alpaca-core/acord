@@ -21,7 +21,8 @@ public:
     WsSession(const AppCtx& ctx) : m_appCtx(ctx)
     {}
 
-    void wsOpened() override {
+    void wsOpened(std::string_view target) override {
+        CommonWsSession::wsOpened(target);
         ACORD_SRV_LOG(Info, "Session opened");
         auto [local, remote] = LocalChannel_getEndpoints(
             ac::frameio::LocalBufferedChannel_create(10),
@@ -37,7 +38,7 @@ public:
 
 } // namespace
 
-fishnets::WebSocketSessionPtr makeWsSession(const AppCtx& ctx) {
+fishnets::WsSessionHandlerPtr makeWsSession(const AppCtx& ctx) {
     return std::make_shared<WsSession>(ctx);
 }
 } // namespace acord::server

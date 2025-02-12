@@ -16,7 +16,11 @@
 
 #include <ac/frameio/local/LocalIoCtx.hpp>
 
-#include <fishnets/WebSocketServer.hpp>
+#include <fishnets/Context.hpp>
+#include <fishnets/WsServerHandler.hpp>
+#include <fishnets/util/WsSessionHandler.hpp>
+
+#include <thread>
 
 #ifdef HAVE_ACLP_OUT_DIR
 #include "aclp-out-dir.h"
@@ -27,19 +31,33 @@ namespace acord::server {
 struct App::Impl {
     ac::frameio::LocalIoCtx io;
     AssetMgr assetMgr;
-    LocalSessionFactory sessionFactory{ assetMgr };
+    LocalSessionFactory sessionFactory{assetMgr};
     AppCtx ctx{io, sessionFactory};
-    fishnets::WebSocketServer server;
+    fishnets::Context wsCtx;
+    std::vector<std::thread> wsThreads;
 
     Impl(uint16_t wsPort)
-        : server([&](const fishnets::WebSocketEndpointInfo&) {
-            return makeWsSession(ctx);
-        }, wsPort, 3, nullptr)
     {
 #ifdef HAVE_ACLP_OUT_DIR
         ac::local::Lib::addPluginDir(ACLP_OUT_DIR);
 #endif
         ac::local::Lib::loadAllPlugins();
+
+        wsCtx.wsServeLocalhost(wsPort, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
+            return makeWsSession(ctx);
+        }));
+        for (int i = 0; i < 3; ++i) {
+            wsThreads.emplace_back([this] {
+                wsCtx.run();
+            });
+        }
+    }
+
+    ~Impl() {
+        wsCtx.stop();
+        for (auto& t : wsThreads) {
+            t.join();
+        }
     }
 };
 

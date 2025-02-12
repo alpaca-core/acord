@@ -3,26 +3,24 @@
 //
 #pragma once
 #include "api.h"
+#include <acord/DefaultPort.hpp>
 #include <ac/frameio/StreamEndpoint.hpp>
 #include <string>
 #include <cstdint>
 
 namespace acord::client {
 
-class ACORD_CLIENT_API Connection {
+class ACORD_CLIENT_API IoCtx {
 public:
-    Connection();
-    ~Connection();
-    Connection(const Connection&) = delete;
-    Connection& operator=(const Connection&) = delete;
+    IoCtx(size_t numThreads = 1);
+    ~IoCtx();
+    IoCtx(const IoCtx&) = delete;
+    IoCtx& operator=(const IoCtx&) = delete;
 
-    void initiate(
-        std::string host, uint16_t port,
-        ac::frameio::StreamEndpoint localEndpoint
+    void connect(
+        ac::frameio::StreamEndpoint localEndpoint,
+        uint16_t port = Default_WsPort
     );
-
-    void close();
-
 private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;

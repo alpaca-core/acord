@@ -1,5 +1,4 @@
-#include <acord/client/Connection.hpp>
-#include <acord/DefaultPort.hpp>
+#include <acord/client/IoCtx.hpp>
 #include <acord/schema/Acord.hpp>
 
 #include <ac/frameio/local/LocalChannelUtil.hpp>
@@ -35,8 +34,8 @@ int main() try {
         ac::frameio::LocalBufferedChannel_create(10)
     );
 
-    acord::client::Connection con;
-    con.initiate("localhost", acord::Default_WsPort, std::move(remote));
+    acord::client::IoCtx acordIo;
+    acordIo.connect(std::move(remote));
 
     ac::schema::BlockingIoHelper io(ac::frameio::BlockingIo(std::move(local)));
 
