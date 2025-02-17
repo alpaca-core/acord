@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLama.cpp compare Acord demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px; /* Space between containers */
+        }
+
+        .model-section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .input-box {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            flex-grow: 1; /* Input takes up available space */
+            margin-right: 5px;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: calc(100% - 10px); /* Account for padding and border */
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        #status {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LLama compare models</h1>
+
+    <div class="container">
+
+        <div class="model-section">
+            <h2>Localhost</h2>
+            <div class="input-box">
+                <input type="text" id="model-local" value="Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf">
+                <button class="btn" id="loadBtn-local" onclick="loadModel('local')">Load model</button>
+            </div>
+            <input type="text" id="prompt-local" placeholder="Initial prompt">
+            <button id="genBtn-local" onclick="sendPrompt('local')">Generate</button>
+            <textarea id="generated-local" rows="5" cols="33">Generated text...</textarea>
+            <button id="genDataBtn-local" onclick="getData('local')">Get Data</button>
+            <button id="cmpBtn-local" onclick="compare('local')">Compare Last data</button>
+            <p id="status-local">Waiting for input...</p>
+        </div>
+
+        <div class="model-section">
+            <h2>Win Host</h2>
+            <div class="input-box">
+                <input type="text" id="model-win" value="Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf">
+                <button class="btn" id="loadBtn-win" onclick="loadModel('win')">Load model</button>
+            </div>
+            <input type="text" id="prompt-win" placeholder="Initial prompt">
+            <button id="genBtn-win" onclick="sendPrompt('win')">Generate</button>
+            <textarea id="generated-win" rows="5" cols="33">Generated text...</textarea>
+            <button id="genDataBtn-win" onclick="getData('win')">Get Data</button>
+            <button id="cmpBtn-win" onclick="compare('win')">Compare Last data</button>
+            <p id="status-win">Waiting for input...</p>
+        </div>
+
+    </div>
+
+    <script>
+        const LOG_LEVLEL = {
+            INFO: 0,
+            SUCCESS: 1,
+            ERROR: 2
+        }
+
+        function setStatus(owner,owner, message, level) {
+            let status = null;
+            if (owner === "local") {
+                status = document.getElementById("status-local");
+            } else {
+                status = document.getElementById("status-win");
+            }
+            status.innerText = message;
+            if (level == LOG_LEVLEL.INFO) {
+                status.style.color = "white";
+            } else if (level == LOG_LEVLEL.SUCCESS) {
+                status.style.color = "green";
+            } else if (level == LOG_LEVLEL.ERROR) {
+                status.style.color = "red";
+            }
+        }
+
+        const AC_STATES = {
+            CONNECTED: 0,
+            INITIALIZED: 1,
+            MODEL_LOADED: 2,
+            INSTANCE_STARTED: 3,
+            GENERATION: 4,
+            DISCONNECTED: 5
+        };
+
+        let acState = AC_STATES.ERROR;
+
+        const localModelsPath = "/Users/pacominev/repos/ac/ac-dev/ilib-llama.cpp/tmp/"
+
+        const localhost = "ws://localhost:7654";
+        const winLocalhost = "ws://192.168.1.13:7654"
+
+        function createWSConnection(url) {
+            // Connect directly to Acord WebSocket
+            const ws = new WebSocket(url);
+
+            let owner = url == localhost ? "local" : "win";
+
+            ws.onopen = () => {
+                console.log(`Connected to AC WebSocket: ${url}`);
+                setStatus(owner, "Connected!", LOG_LEVLEL.SUCCESS);
+                acState = AC_STATES.CONNECTED;
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket error:", error);
+                setStatus(owner,`Error: Couldn't make web socket connection to ${url}! Start the server...`, LOG_LEVLEL.ERROR);
+                acState = AC_STATES.DISCONNECTED;
+            };
+
+            ws.onmessage = async (event) => {
+                const response = JSON.parse(event.data);
+                console.log(response);
+            };
+
+            return ws;
+        }
+
+
+        const wsLocal = createWSConnection(localhost);
+        const wsWin = createWSConnection(winLocalhost);
+
+        async function sendRequest(ws, data, errorCb) {
+            const request = JSON.stringify(data);
+            ws.send(request);
+            console.log(`Op - ${data.op}: Started`);
+            if (data.op === "run" || data.op === "get-token-data" || data.op === "compare") {
+                return new Promise((resolve, reject) => {
+                    ws.onmessage = (event) => {
+                        const {data, op} = JSON.parse(event.data);
+                        console.log(data);
+                        console.log(`Op - ${op}: Finished`);
+                        resolve(data);
+                    };
+                });
+            } else {
+                return new Promise((resolve, reject) => {
+                    ws.onmessage = (event) => {
+                        const response = JSON.parse(event.data);
+                        console.log(response);
+                        if (response.op.startsWith("s:")) {
+                            console.log(`Op - ${response.op}: Finished`);
+                            // In the Acord we have 2 notifications
+                            // 1 - the op itself and if there is an error
+                            // 2 - the new state
+                            // So we resolve only we receive the new state in order to continue
+                            resolve(response);
+                        } else {
+                            console.log(`Op - ${response.op}: Received`);
+                            if (response.op === "error") {
+                                errorCb(response);
+                                resolve(response);
+                            }
+                        }
+                    };
+                });
+            }
+       }
+
+       async function prepare(ws) {
+           await sendRequest(ws, {
+                    op: "load_provider",
+                    data: {
+                        name: "llama.cpp"
+                    }
+                });
+
+            acState = AC_STATES.INITIALIZED;
+            console.log(`Provider stable-diffusion.cpp is initialized!`);
+       }
+
+       (async() => {
+            while (wsLocal.readyState !== WebSocket.OPEN) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+
+            while (wsWin.readyState !== WebSocket.OPEN) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                console.log(`${winLocalhost}: Waiting for connection...`);
+            }
+
+            await prepare(wsLocal);
+            await prepare(wsWin);
+        })();
+
+        async function loadModel(owner) {
+            let ws = null;
+            if (owner == "local") {
+                ws = wsLocal;
+            } else {
+                ws = wsWin;
+            }
+
+            if (ws.readyState !== WebSocket.OPEN) {
+                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                return;
+            }
+
+            if (acState === AC_STATES.INSTANCE_STARTED) {
+                setStatus(owner,"Model is already loaded. Refresh to load a new one.", LOG_LEVLEL.ERROR);
+            }
+
+            if (acState === AC_STATES.INITIALIZED) {
+                let modelBox = document.getElementById("modelBox");
+                let modelInput = document.getElementById("model");
+                let modelLoadBtn = document.getElementById("loadBtn");
+
+
+                let modelPath = "";
+                if (localhost === localhost) {
+                    modelPath = localModelsPath + modelInput.value;
+                }
+                if (modelPath === "") {
+                    setStatus(owner,"Please enter the path to the model!", LOG_LEVLEL.ERROR);
+                    return;
+                }
+
+                // Disable load button button
+                modelLoadBtn.disabled = true;
+                modelLoadBtn.style.opacity = "0.6"; // Reduce opacity for a disabled look
+                modelLoadBtn.style.pointerEvents = "none";
+
+                setStatus(owner,"Loading...", LOG_LEVLEL.INFO);
+
+                let loadingError = false;
+                let handleError = (data) => {
+                    setStatus(owner,`Error loading model! Message: "${data.data}"`, LOG_LEVLEL.ERROR);
+                    modelLoadBtn.disabled = false;
+                    modelLoadBtn.style.opacity = "1";
+                    modelLoadBtn.style.pointerEvents = "auto";
+                    loadingError = true;
+                }
+
+                await sendRequest(ws, {
+                        op: "load-model",
+                        data: {
+                            gguf: modelPath,
+                            useGpu: true
+                        }
+                    }, handleError);
+
+                if (loadingError) {
+                    return;
+                }
+
+                acState = AC_STATES.MODEL_LOADED;
+                console.log(`Model ${modelPath.split('/').at(-1)} loaded!`);
+
+                await sendRequest(ws, {
+                        op: "start-instance"
+                    });
+
+                acState = AC_STATES.INSTANCE_STARTED;
+                console.log(`Instance started!`);
+
+                setStatus(owner,"Model loaded!", LOG_LEVLEL.SUCCESS);
+
+                let status = document.createElement("p");
+                status.innerHTML = `Model \"${modelPath.split('/').at(-1)}\" is loaded! To load a new one refresh the page.`;
+                status.style.color = "white";
+                modelBox.appendChild(status);
+
+                modelInput.style.display = "none";
+                modelLoadBtn.style.display = "none";
+            } else {
+                document.getElementById("status").innerText = "Provider is not loaded yet!";
+            }
+        }
+
+        async function sendPrompt(owner) {
+            let ws = null;
+            if (owner == "local") {
+                ws = wsLocal;
+            } else {
+                ws = wsWin;
+            }
+
+            const prompt = document.getElementById("prompt").value;
+            if (ws.readyState !== WebSocket.OPEN) {
+                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                return;
+            }
+
+            if (acState === AC_STATES.INSTANCE_STARTED) {
+                setStatus(owner,"Generating...", LOG_LEVLEL.INFO);
+                document.getElementById("genBtn").disabled = true;
+                const responseData = await sendRequest(ws, {
+                        op: "run",
+                        data: {
+                            prompt: prompt,
+                            max_tokens: 50
+                        }
+                    });
+                document.getElementById("generated").value = prompt + responseData.result;
+
+                setStatus(owner,"Generation Done! Try again with a new prompt.", LOG_LEVLEL.SUCCESS);
+                document.getElementById("genBtn").disabled = false;
+            } else {
+                setStatus(owner,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+            }
+        }
+
+        let lastData = null
+        async function getData(owner) {
+            let ws = null;
+            if (owner == "local") {
+                ws = wsLocal;
+            } else {
+                ws = wsWin;
+            }
+
+
+            const prompt = document.getElementById("prompt").value;
+            if (ws.readyState !== WebSocket.OPEN) {
+                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                return;
+            }
+
+            if (acState === AC_STATES.INSTANCE_STARTED) {
+                setStatus(owner,"Getting token data...", LOG_LEVLEL.INFO);
+                let btn = document.getElementById("genDataBtn");
+                // btn.disabled = true;
+
+                const responseData = await sendRequest(ws, {
+                        op: "get-token-data",
+                    });
+
+                lastData = responseData;
+                setStatus(owner,"Getting data done!", LOG_LEVLEL.SUCCESS);
+                btn.disabled = false;
+            } else {
+                setStatus(owner,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+            }
+        }
+
+        async function compare(owner) {
+            let ws = null;
+            if (owner == "local") {
+                ws = wsLocal;
+            } else {
+                ws = wsWin;
+            }
+
+            const prompt = document.getElementById("prompt").value;
+            if (ws.readyState !== WebSocket.OPEN) {
+                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                return;
+            }
+
+            if (acState === AC_STATES.INSTANCE_STARTED) {
+
+                if (lastData === null) {
+                    setStatus(owner,"No data to compare!", LOG_LEVLEL.ERROR);
+                    return;
+                }
+
+                setStatus(owner,"Comparing...", LOG_LEVLEL.INFO);
+                let btn = document.getElementById("cmpBtn");
+                // btn.disabled = true;
+                const responseData = await sendRequest(ws, {
+                        op: "compare-tokens",
+                        data: {
+                            tokens1: lastData.tokens,
+                            logits1: lastData.logits,
+                            probs1: lastData.probs,
+                            tokens2: lastData.tokens,
+                            logits2: lastData.logits,
+                            probs2: lastData.probs
+                        }
+                    });
+
+                setStatus(owner,"Generation Done! Try again with a new prompt.", LOG_LEVLEL.SUCCESS);
+                btn.disabled = false;
+            } else {
+                setStatus(owner,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+            }
+        }
+    </script>
+</body>
+</html>
