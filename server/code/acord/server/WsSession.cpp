@@ -9,8 +9,8 @@
 #include <acord/CommonWsSession.hpp>
 
 #include <ac/frameio/local/LocalIoCtx.hpp>
-#include <ac/frameio/local/LocalBufferedChannel.hpp>
-#include <ac/frameio/local/LocalChannelUtil.hpp>
+#include <ac/frameio/local/BufferedChannel.hpp>
+#include <ac/frameio/local/BufferedChannelStream.hpp>
 
 namespace acord::server {
 namespace {
@@ -24,9 +24,9 @@ public:
     void wsOpened(std::string_view target) override {
         CommonWsSession::wsOpened(target);
         ACORD_SRV_LOG(Info, "Session opened");
-        auto [local, remote] = LocalChannel_getEndpoints(
-            ac::frameio::LocalBufferedChannel_create(10),
-            ac::frameio::LocalBufferedChannel_create(10)
+        auto [local, remote] = ac::frameio::BufferedChannel_getEndpoints(
+            ac::frameio::BufferedChannel_create(10),
+            ac::frameio::BufferedChannel_create(10)
         );
 
         m_dispatch = std::move(local);

@@ -5,8 +5,8 @@
 #include "FsUtil.hpp"
 #include "Logging.hpp"
 
-#include <ac/frameio/local/LocalBufferedChannel.hpp>
-#include <ac/frameio/local/LocalChannelUtil.hpp>
+#include <ac/frameio/local/BufferedChannel.hpp>
+#include <ac/frameio/local/BufferedChannelStream.hpp>
 #include <ac/frameio/StreamEndpoint.hpp>
 #include <ac/frameio/local/BlockingIo.hpp>
 
@@ -122,9 +122,9 @@ AssetMgr::AssetMgr() : m_impl(std::make_unique<Impl>()) {}
 AssetMgr::~AssetMgr() = default;
 
 ac::frameio::StreamEndpoint AssetMgr::makeAssetsAvailable(std::vector<std::string> assetUrls) {
-    auto [local, remote] = ac::frameio::LocalChannel_getEndpoints(
-        ac::frameio::LocalBufferedChannel_create(5),
-        ac::frameio::LocalBufferedChannel_create(5)
+    auto [local, remote] = ac::frameio::BufferedChannel_getEndpoints(
+        ac::frameio::BufferedChannel_create(5),
+        ac::frameio::BufferedChannel_create(5)
     );
 
     post(m_impl->m_strand, [this, movecap(assetUrls, local)]() mutable {

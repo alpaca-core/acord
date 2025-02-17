@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 //
 #include "CommonWsSession.hpp"
+#include "WsSessionHandlerWobj.hpp"
 
 #include <ac/jalog/Log.hpp>
 
@@ -16,15 +17,15 @@ void CommonWsSession::wsOpened(std::string_view target) {
 
 void CommonWsSession::wsClosed(std::string reason) {
     AC_JALOG(Info, "Session closed: ", reason);
-    m_dispatch.readStream->close();
-    m_dispatch.writeStream->close();
+    m_dispatch.read_stream->close();
+    m_dispatch.write_stream->close();
 }
 
 void CommonWsSession::tryWriteToDispatch() {
     if (!m_receiving) {
         return;
     }
-    auto res = m_dispatch.writeStream->write(*m_receiving, [&] {
+    auto res = m_dispatch.write_stream->write(*m_receiving, [&] {
         return [this, pl = shared_from_this()] {
             postWsIoTask([this, pl = shared_from_this()]() {
                 tryWriteToDispatch();
@@ -76,7 +77,7 @@ void CommonWsSession::tryReadFromDispatch() {
     auto& buf = m_sending.emplace();
 
     ac::Frame frame;
-    auto res = m_dispatch.readStream->read(frame, [this] {
+    auto res = m_dispatch.read_stream->read(frame, [this] {
         return [this, pl = shared_from_this()] {
             postWsIoTask([this, pl = shared_from_this()]() {
                 tryReadFromDispatch();

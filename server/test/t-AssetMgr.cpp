@@ -29,7 +29,7 @@ TEST_CASE("dl") {
     auto res = io.poll();
 
     CHECK(res.success());
-    auto& frame = res.frame;
+    auto& frame = res.value;
     CHECK(frame.op == "assets");
     auto paths = frame.data.get<std::vector<std::string>>();
     CHECK(paths.size() == 1);

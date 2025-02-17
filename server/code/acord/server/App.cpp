@@ -20,6 +20,8 @@
 #include <fishnets/WsServerHandler.hpp>
 #include <fishnets/util/WsSessionHandler.hpp>
 
+#include <ac/xec/context_work_guard.hpp>
+
 #include <thread>
 
 #ifdef HAVE_ACLP_OUT_DIR
@@ -30,6 +32,7 @@ namespace acord::server {
 
 struct App::Impl {
     ac::frameio::LocalIoCtx io;
+    ac::xec::context_work_guard wg;
     AssetMgr assetMgr;
     LocalSessionFactory sessionFactory{assetMgr};
     AppCtx ctx{io, sessionFactory};
@@ -37,6 +40,7 @@ struct App::Impl {
     std::vector<std::thread> wsThreads;
 
     Impl(uint16_t wsPort)
+        : wg(io)
     {
 #ifdef HAVE_ACLP_OUT_DIR
         ac::local::Lib::addPluginDir(ACLP_OUT_DIR);
@@ -72,7 +76,7 @@ void App::run() {
 }
 
 void App::stop() {
-    m_impl->io.forceStop();
+    m_impl->io.stop();
 }
 
 } // namespace acord::server

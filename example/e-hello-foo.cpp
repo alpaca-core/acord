@@ -1,8 +1,8 @@
 #include <acord/client/IoCtx.hpp>
 #include <acord/schema/Acord.hpp>
 
-#include <ac/frameio/local/LocalChannelUtil.hpp>
-#include <ac/frameio/local/LocalBufferedChannel.hpp>
+#include <ac/frameio/local/BufferedChannelStream.hpp>
+#include <ac/frameio/local/BufferedChannel.hpp>
 #include <ac/frameio/local/BlockingIo.hpp>
 #include <ac/schema/BlockingIoHelper.hpp>
 
@@ -29,15 +29,15 @@ int main() try {
     acord::server::AppRunner appRunner;
 #endif
 
-    auto [local, remote] = LocalChannel_getEndpoints(
-        ac::frameio::LocalBufferedChannel_create(10),
-        ac::frameio::LocalBufferedChannel_create(10)
+    auto [local, remote] = ac::frameio::BufferedChannel_getEndpoints(
+        ac::frameio::BufferedChannel_create(10),
+        ac::frameio::BufferedChannel_create(10)
     );
 
     acord::client::IoCtx acordIo;
     acordIo.connect(std::move(remote));
 
-    ac::schema::BlockingIoHelper io(ac::frameio::BlockingIo(std::move(local)));
+    ac::schema::BlockingIoHelper io(std::move(local));
 
     io.expectState<acrd::State>();
     auto files = io.call<acrd::State::OpMakeAssetsAvailable>(

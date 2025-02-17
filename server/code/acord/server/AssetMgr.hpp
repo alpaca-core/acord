@@ -3,13 +3,11 @@
 //
 #pragma once
 #include "api.h"
+#include "ac/frameio/StreamEndpoint.hpp"
 #include <vector>
 #include <string>
 #include <memory>
 
-namespace ac::frameio {
-struct StreamEndpoint;
-}
 
 namespace acord::server {
 

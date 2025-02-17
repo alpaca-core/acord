@@ -21,6 +21,7 @@ include(init_ac_prj)
 include(ac_build_prj_util)
 include(icm_add_lib)
 
+option(BUILD_SHARED_LIBS "Build shared libraries" ON) # not really needed, but it's a workaround for FindOpenSSL.cmake
 option(ACORD_BUILD_TESTS "${PROJECT_NAME}: build tests" ${testsDefault})
 option(ACORD_BUILD_EXAMPLES "${PROJECT_NAME}: build examples" ${examplesDefault})
 mark_as_advanced(ACORD_BUILD_TESTS ACORD_BUILD_EXAMPLES)
@@ -34,7 +35,7 @@ endmacro()
 #######################################
 # packages
 
-add_ac_local(0.1.12)
+add_ac_local(0.1.13)
 
 if(ACORD_BUILD_TESTS)
     ac_dep(doctest-util)

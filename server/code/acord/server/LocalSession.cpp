@@ -29,8 +29,8 @@ using Schema = ac::schema::acord::State;
 ac::frameio::SessionCoro<void> Acord_makeAssetsAvailable(coro::Io& io, std::vector<std::string> urls, AssetMgr& assetMgr) {
     auto aio = io.attach(assetMgr.makeAssetsAvailable(std::move(urls)));
     auto result = co_await aio.pollFrame();
-    result.frame.op = Schema::OpMakeAssetsAvailable::id;
-    co_await io.pushFrame(std::move(result.frame));
+    result.value.op = Schema::OpMakeAssetsAvailable::id;
+    co_await io.pushFrame(std::move(result.value));
 }
 
 ac::frameio::SessionCoro<ac::frameio::SessionHandlerPtr> Acord_run(AssetMgr& assetMgr) {
@@ -41,17 +41,17 @@ ac::frameio::SessionCoro<ac::frameio::SessionHandlerPtr> Acord_run(AssetMgr& ass
 
         while (true) {
             auto f = co_await io.pollFrame();
-            if (f.frame.op == Schema::OpMakeAssetsAvailable::id) {
+            if (f.value.op == Schema::OpMakeAssetsAvailable::id) {
                 co_await Acord_makeAssetsAvailable(
                     io,
-                    ac::schema::Struct_fromDict<Schema::OpMakeAssetsAvailable::Params>(std::move(f.frame.data)),
+                    ac::schema::Struct_fromDict<Schema::OpMakeAssetsAvailable::Params>(std::move(f.value.data)),
                     assetMgr
                 );
             }
-            else if (f.frame.op == Schema::OpLoadProvider::id) {
+            else if (f.value.op == Schema::OpLoadProvider::id) {
                 std::string error;
                 try {
-                    auto name = ac::schema::Struct_fromDict<Schema::OpLoadProvider::Params>(std::move(f.frame.data)).name;
+                    auto name = ac::schema::Struct_fromDict<Schema::OpLoadProvider::Params>(std::move(f.value.data)).name;
                     assert(name.hasValue());
                     auto next = ac::local::Lib::createSessionHandler(name.value());
                     co_await io.pushFrame({Schema::OpLoadProvider::id, {}});
@@ -63,7 +63,7 @@ ac::frameio::SessionCoro<ac::frameio::SessionHandlerPtr> Acord_run(AssetMgr& ass
                 co_await io.pushFrame({"error", std::move(error)});
             }
             else {
-                co_await io.pushFrame({"error", "Unknown op: " + f.frame.op});
+                co_await io.pushFrame({"error", "Unknown op: " + f.value.op});
             }
         }
     }
