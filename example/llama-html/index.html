@@ -16,12 +16,14 @@
         .container {
             display: flex;
             gap: 20px; /* Space between containers */
+            flex-wrap: wrap
         }
 
         .model-section {
             border: 1px solid #ccc;
             padding: 20px;
             border-radius: 5px;
+            flex: 2 2 20%;
         }
 
         .input-box {
@@ -57,7 +59,7 @@
             border-radius: 3px;
         }
 
-        #status {
+        .status {
             margin-top: 10px;
         }
     </style>
@@ -65,60 +67,21 @@
 <body>
     <h1>LLama compare models</h1>
 
+    <select id="model-src">
+        <option value="localhost">localhost</option>
+        <option value="192.168.1.118">192.168.1.118</option>
+    </select>
+    <button id="addModelBtn" onclick="addInstanceCard()">Add Model Instance (+)</button>
     <div class="container">
-
-        <div class="model-section">
-            <h2>Localhost</h2>
-            <div class="input-box">
-                <input type="text" id="model-local" value="Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf">
-                <button class="btn" id="loadBtn-local" onclick="loadModel('local')">Load model</button>
-            </div>
-            <input type="text" id="prompt-local" placeholder="Initial prompt">
-            <button id="genBtn-local" onclick="sendPrompt('local')">Generate</button>
-            <textarea id="generated-local" rows="5" cols="33">Generated text...</textarea>
-            <button id="genDataBtn-local" onclick="getData('local')">Get Data</button>
-            <button id="cmpBtn-local" onclick="compare('local')">Compare Last data</button>
-            <p id="status-local">Waiting for input...</p>
-        </div>
-
-        <div class="model-section">
-            <h2>Win Host</h2>
-            <div class="input-box">
-                <input type="text" id="model-win" value="Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf">
-                <button class="btn" id="loadBtn-win" onclick="loadModel('win')">Load model</button>
-            </div>
-            <input type="text" id="prompt-win" placeholder="Initial prompt">
-            <button id="genBtn-win" onclick="sendPrompt('win')">Generate</button>
-            <textarea id="generated-win" rows="5" cols="33">Generated text...</textarea>
-            <button id="genDataBtn-win" onclick="getData('win')">Get Data</button>
-            <button id="cmpBtn-win" onclick="compare('win')">Compare Last data</button>
-            <p id="status-win">Waiting for input...</p>
-        </div>
-
     </div>
+
+    <div id="comparison-results"></div>
 
     <script>
         const LOG_LEVLEL = {
             INFO: 0,
             SUCCESS: 1,
             ERROR: 2
-        }
-
-        function setStatus(owner,owner, message, level) {
-            let status = null;
-            if (owner === "local") {
-                status = document.getElementById("status-local");
-            } else {
-                status = document.getElementById("status-win");
-            }
-            status.innerText = message;
-            if (level == LOG_LEVLEL.INFO) {
-                status.style.color = "white";
-            } else if (level == LOG_LEVLEL.SUCCESS) {
-                status.style.color = "green";
-            } else if (level == LOG_LEVLEL.ERROR) {
-                status.style.color = "red";
-            }
         }
 
         const AC_STATES = {
@@ -130,29 +93,40 @@
             DISCONNECTED: 5
         };
 
-        let acState = AC_STATES.ERROR;
-
         const localModelsPath = "/Users/pacominev/repos/ac/ac-dev/ilib-llama.cpp/tmp/"
 
         const localhost = "ws://localhost:7654";
-        const winLocalhost = "ws://192.168.1.13:7654"
+        const winLocalhost = "ws://192.168.1.118:7654";
 
-        function createWSConnection(url) {
+        let model2LogitData = new Map();
+        let modelCount = 0; // Counter to generate unique IDs
+
+        function setStatus(root, message, level) {
+            const status = root.getElementsByClassName("status")[0];
+            status.innerText = message;
+            if (level == LOG_LEVLEL.INFO) {
+                status.style.color = "white";
+            } else if (level == LOG_LEVLEL.SUCCESS) {
+                status.style.color = "green";
+            } else if (level == LOG_LEVLEL.ERROR) {
+                status.style.color = "red";
+            }
+        }
+
+        function createWSConnection(url, root) {
             // Connect directly to Acord WebSocket
             const ws = new WebSocket(url);
 
-            let owner = url == localhost ? "local" : "win";
-
             ws.onopen = () => {
                 console.log(`Connected to AC WebSocket: ${url}`);
-                setStatus(owner, "Connected!", LOG_LEVLEL.SUCCESS);
-                acState = AC_STATES.CONNECTED;
+                setStatus(root, "Connected!", LOG_LEVLEL.SUCCESS);
+                ws.acState = AC_STATES.CONNECTED;
             };
 
             ws.onerror = (error) => {
                 console.error("WebSocket error:", error);
-                setStatus(owner,`Error: Couldn't make web socket connection to ${url}! Start the server...`, LOG_LEVLEL.ERROR);
-                acState = AC_STATES.DISCONNECTED;
+                setStatus(root,`Error: Couldn't make web socket connection to ${url}! Start the server...`, LOG_LEVLEL.ERROR);
+                ws.acState = AC_STATES.DISCONNECTED;
             };
 
             ws.onmessage = async (event) => {
@@ -163,15 +137,79 @@
             return ws;
         }
 
+        async function prepareElements(root) {
+            let host = document.getElementById('model-src')
+            let rootHostEl = root.getElementsByClassName('host')[0];
+            rootHostEl.innerText = host.value;
 
-        const wsLocal = createWSConnection(localhost);
-        const wsWin = createWSConnection(winLocalhost);
+            const ws = createWSConnection(`ws://${host.value}:7654`, root);
+            ws.acState = AC_STATES.ERROR;
+
+            while (ws.readyState !== WebSocket.OPEN) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+
+            await prepare(ws);
+
+
+            let loadBtn = root.getElementsByClassName('load-model-btn')[0]
+            loadBtn.addEventListener('click', () => loadModel(ws, root));
+
+            let genBtn = root.getElementsByClassName('gen-btn')[0];
+            genBtn.addEventListener('click', () => sendPrompt(ws, root));
+
+            let getBtn = root.getElementsByClassName('get-data-btn')[0];
+            getBtn.addEventListener('click', () => getData(ws, root));
+
+            let cmpBtn = root.getElementsByClassName('cmp-btn')[0];
+            cmpBtn.addEventListener('click', () => compare(ws, root));
+        }
+
+        function addInstanceCard() {
+            modelCount++; // Increment model count
+            const modelId = `model-${modelCount}`; // Unique ID for each model section
+            model2LogitData.set(modelId, {
+                tokens: [],
+                logits: [],
+                probs: []
+            }); // Create a new map for the model
+
+            // Create model section
+            const modelSection = document.createElement("div");
+            modelSection.className = "model-section";
+            modelSection.id = modelId;
+            modelSection.innerHTML = `
+                <div class="host"></div>
+                <div class="model-title">Model ${modelCount}</div>
+                <div class="load-model-box">
+                    <input type="text" class="model-name" value="Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf">
+                    <input type="checkbox" class="use-gpu" checked name="useGpu"/>
+                    <label class= "use-gpu-label" for="useGpu">Use GPU</label>
+                    <button class="load-model-btn" >Load model</button>
+                </div>
+                <textarea class="prompt" rows="5" cols="33">Initial prompt...</textarea>
+                <input type="checkbox" class="tokenize-only" name="tokenize-only"/>
+                <label class= "tokenize-only-label" for="tokenize-only">Tokenize Only</label>
+                <button class="gen-btn">Generate</button>
+                <textarea class="out-generated" rows="5" cols="33">Generated text...</textarea>
+
+                <button class="get-data-btn">Get Data</button>
+                <button class="cmp-btn">Compare with other connections</button>
+
+                <p class="status">Waiting for input...</p>
+            `;
+
+            prepareElements(modelSection);
+
+            // Append the new section to the container
+            document.querySelector(".container").appendChild(modelSection);
+        }
 
         async function sendRequest(ws, data, errorCb) {
             const request = JSON.stringify(data);
             ws.send(request);
             console.log(`Op - ${data.op}: Started`);
-            if (data.op === "run" || data.op === "get-token-data" || data.op === "compare") {
+            if (data.op === "run" || data.op === "get-token-data" || data.op === "compare-tokens") {
                 return new Promise((resolve, reject) => {
                     ws.onmessage = (event) => {
                         const {data, op} = JSON.parse(event.data);
@@ -212,46 +250,26 @@
                     }
                 });
 
-            acState = AC_STATES.INITIALIZED;
+            ws.acState = AC_STATES.INITIALIZED;
             console.log(`Provider stable-diffusion.cpp is initialized!`);
        }
 
-       (async() => {
-            while (wsLocal.readyState !== WebSocket.OPEN) {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-
-            while (wsWin.readyState !== WebSocket.OPEN) {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-                console.log(`${winLocalhost}: Waiting for connection...`);
-            }
-
-            await prepare(wsLocal);
-            await prepare(wsWin);
-        })();
-
-        async function loadModel(owner) {
-            let ws = null;
-            if (owner == "local") {
-                ws = wsLocal;
-            } else {
-                ws = wsWin;
-            }
-
+        async function loadModel(ws, root) {
             if (ws.readyState !== WebSocket.OPEN) {
-                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                setStatus(root, "WebSocket are not connected!", LOG_LEVLEL.ERROR);
                 return;
             }
 
-            if (acState === AC_STATES.INSTANCE_STARTED) {
-                setStatus(owner,"Model is already loaded. Refresh to load a new one.", LOG_LEVLEL.ERROR);
+            if (ws.acState === AC_STATES.INSTANCE_STARTED) {
+                setStatus(root, "Model is already loaded. Refresh to load a new one.", LOG_LEVLEL.ERROR);
             }
 
-            if (acState === AC_STATES.INITIALIZED) {
-                let modelBox = document.getElementById("modelBox");
-                let modelInput = document.getElementById("model");
-                let modelLoadBtn = document.getElementById("loadBtn");
-
+            if (ws.acState === AC_STATES.INITIALIZED) {
+                let modelTitle = root.getElementsByClassName(`model-title`)[0];
+                let modelBox = root.getElementsByClassName(`load-model-box`)[0];
+                let modelInput = root.getElementsByClassName(`model-name`)[0];
+                let useGpuCheck = root.getElementsByClassName(`use-gpu`)[0];
+                let modelLoadBtn = root.getElementsByClassName(`load-model-btn`)[0];
 
                 let modelPath = "";
                 if (localhost === localhost) {
@@ -267,11 +285,11 @@
                 modelLoadBtn.style.opacity = "0.6"; // Reduce opacity for a disabled look
                 modelLoadBtn.style.pointerEvents = "none";
 
-                setStatus(owner,"Loading...", LOG_LEVLEL.INFO);
+                setStatus(root, "Loading...", LOG_LEVLEL.INFO);
 
                 let loadingError = false;
                 let handleError = (data) => {
-                    setStatus(owner,`Error loading model! Message: "${data.data}"`, LOG_LEVLEL.ERROR);
+                    setStatus(root, `Error loading model! Message: "${data.data}"`, LOG_LEVLEL.ERROR);
                     modelLoadBtn.disabled = false;
                     modelLoadBtn.style.opacity = "1";
                     modelLoadBtn.style.pointerEvents = "auto";
@@ -282,7 +300,7 @@
                         op: "load-model",
                         data: {
                             gguf: modelPath,
-                            useGpu: true
+                            useGpu: useGpuCheck.checked
                         }
                     }, handleError);
 
@@ -290,136 +308,146 @@
                     return;
                 }
 
-                acState = AC_STATES.MODEL_LOADED;
-                console.log(`Model ${modelPath.split('/').at(-1)} loaded!`);
+                ws.acState = AC_STATES.MODEL_LOADED;
+                const hardware = useGpuCheck.checked ? "GPU" : "CPU";
+                modelTitle.innerText = modelTitle.innerText + ` - ${hardware} ${modelInput.value}`;
+
+                console.log(`Model: ${modelTitle.innerText} loaded!`);
 
                 await sendRequest(ws, {
-                        op: "start-instance"
-                    });
+                    op: "start-instance"
+                });
 
-                acState = AC_STATES.INSTANCE_STARTED;
+                ws.acState = AC_STATES.INSTANCE_STARTED;
                 console.log(`Instance started!`);
 
-                setStatus(owner,"Model loaded!", LOG_LEVLEL.SUCCESS);
+                setStatus(root,"Model loaded!", LOG_LEVLEL.SUCCESS);
 
-                let status = document.createElement("p");
-                status.innerHTML = `Model \"${modelPath.split('/').at(-1)}\" is loaded! To load a new one refresh the page.`;
-                status.style.color = "white";
-                modelBox.appendChild(status);
+                // let status = document.createElement("p");
+                // status.innerHTML = `Model \"${modelPath.split('/').at(-1)}\" is loaded! To load a new one refresh the page.`;
+                // status.style.color = "white";
+                // modelBox.appendChild(status);
 
                 modelInput.style.display = "none";
                 modelLoadBtn.style.display = "none";
+                useGpuCheck.style.display = "none";
+                root.getElementsByClassName("use-gpu-label")[0].style.display = "none";
             } else {
                 document.getElementById("status").innerText = "Provider is not loaded yet!";
             }
         }
 
-        async function sendPrompt(owner) {
-            let ws = null;
-            if (owner == "local") {
-                ws = wsLocal;
-            } else {
-                ws = wsWin;
-            }
-
-            const prompt = document.getElementById("prompt").value;
+        async function sendPrompt(ws, root) {
             if (ws.readyState !== WebSocket.OPEN) {
-                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                setStatus(root,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
                 return;
             }
 
-            if (acState === AC_STATES.INSTANCE_STARTED) {
-                setStatus(owner,"Generating...", LOG_LEVLEL.INFO);
-                document.getElementById("genBtn").disabled = true;
+            if (ws.acState === AC_STATES.INSTANCE_STARTED) {
+                const prompt = root.getElementsByClassName("prompt")[0].value;
+                const genBtn = root.getElementsByClassName("gen-btn")[0];
+                const output = root.getElementsByClassName("out-generated")[0];
+                const tokenizeOnly = root.getElementsByClassName("tokenize-only")[0].checked;
+
+                setStatus(root,"Generating...", LOG_LEVLEL.INFO);
+
+                genBtn.disabled = true;
+                genBtn.style.opacity = "0.6";
                 const responseData = await sendRequest(ws, {
                         op: "run",
                         data: {
                             prompt: prompt,
-                            max_tokens: 50
+                            max_tokens: tokenizeOnly ? 0 : 50
                         }
                     });
-                document.getElementById("generated").value = prompt + responseData.result;
+                output.value = prompt + responseData.result;
 
-                setStatus(owner,"Generation Done! Try again with a new prompt.", LOG_LEVLEL.SUCCESS);
-                document.getElementById("genBtn").disabled = false;
+                setStatus(root,"Generation Done! Try again with a new prompt.", LOG_LEVLEL.SUCCESS);
+                genBtn.disabled = false;
+                genBtn.style.opacity = "1";
             } else {
-                setStatus(owner,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+                setStatus(root,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
             }
         }
 
-        let lastData = null
-        async function getData(owner) {
-            let ws = null;
-            if (owner == "local") {
-                ws = wsLocal;
-            } else {
-                ws = wsWin;
-            }
-
-
-            const prompt = document.getElementById("prompt").value;
+        async function getData(ws, root) {
             if (ws.readyState !== WebSocket.OPEN) {
-                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                setStatus(root, "WebSocket are not connected!", LOG_LEVLEL.ERROR);
                 return;
             }
 
-            if (acState === AC_STATES.INSTANCE_STARTED) {
-                setStatus(owner,"Getting token data...", LOG_LEVLEL.INFO);
-                let btn = document.getElementById("genDataBtn");
-                // btn.disabled = true;
+            if (ws.acState === AC_STATES.INSTANCE_STARTED) {
+                setStatus(root, "Getting token data...", LOG_LEVLEL.INFO);
+
+                let btn = root.getElementsByClassName("get-data-btn")[0];
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
 
                 const responseData = await sendRequest(ws, {
                         op: "get-token-data",
                     });
 
-                lastData = responseData;
-                setStatus(owner,"Getting data done!", LOG_LEVLEL.SUCCESS);
+                model2LogitData.set(root.id, responseData);
+                setStatus(root, "Getting data done!", LOG_LEVLEL.SUCCESS);
                 btn.disabled = false;
+                btn.style.opacity = "1";
             } else {
-                setStatus(owner,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+                setStatus(root, "Model is not loaded yet!", LOG_LEVLEL.ERROR);
             }
         }
 
-        async function compare(owner) {
-            let ws = null;
-            if (owner == "local") {
-                ws = wsLocal;
-            } else {
-                ws = wsWin;
-            }
-
-            const prompt = document.getElementById("prompt").value;
+        async function compare(ws, root) {
             if (ws.readyState !== WebSocket.OPEN) {
-                setStatus(owner,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
+                setStatus(root,"WebSocket are not connected!", LOG_LEVLEL.ERROR);
                 return;
             }
 
-            if (acState === AC_STATES.INSTANCE_STARTED) {
-
-                if (lastData === null) {
-                    setStatus(owner,"No data to compare!", LOG_LEVLEL.ERROR);
+            if (ws.acState === AC_STATES.INSTANCE_STARTED) {
+                if (!model2LogitData.has(root.id)) {
+                    setStatus(root, "No data to compare!", LOG_LEVLEL.ERROR);
                     return;
                 }
 
-                setStatus(owner,"Comparing...", LOG_LEVLEL.INFO);
-                let btn = document.getElementById("cmpBtn");
-                // btn.disabled = true;
-                const responseData = await sendRequest(ws, {
-                        op: "compare-tokens",
-                        data: {
-                            tokens1: lastData.tokens,
-                            logits1: lastData.logits,
-                            probs1: lastData.probs,
-                            tokens2: lastData.tokens,
-                            logits2: lastData.logits,
-                            probs2: lastData.probs
-                        }
-                    });
+                setStatus(root, "Comparing...", LOG_LEVLEL.INFO);
+                let btn = root.getElementsByClassName("cmp-btn")[0];
+                btn.disabled = true;
+                btn.style.opacity = "0.6";
 
-                setStatus(owner,"Generation Done! Try again with a new prompt.", LOG_LEVLEL.SUCCESS);
+                const resultEl = document.getElementById("comparison-results");
+                resultEl.innerHTML = '';
+
+                const rootData = model2LogitData.get(root.id);
+                for (let [id, lastData] of model2LogitData) {
+                    if (root.id === id) {
+                        continue;
+                    }
+
+                    const responseData = await sendRequest(ws, {
+                            op: "compare-tokens",
+                            data: {
+                                tokens1: rootData.tokens,
+                                logits1: rootData.logits,
+                                probs1: rootData.probs,
+                                tokens2: lastData.tokens,
+                                logits2: lastData.logits,
+                                probs2: lastData.probs
+                            }
+                        });
+
+                    let el = document.createElement("div");
+                    el.innerHTML = `
+                        <h3>Model ${root.id} vs Model ${id}</h3>
+                        <p>Equal: ${responseData.equal ? "TRUE" : "FALSE"}</p>
+                    `;
+                    resultEl.appendChild(el);
+                }
+
+                setStatus(root, `Comparison finished!`, LOG_LEVLEL.SUCCESS);
+
                 btn.disabled = false;
+                btn.style.opacity = "1";
             } else {
-                setStatus(owner,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+                setStatus(root, "Model is not loaded yet!", LOG_LEVLEL.ERROR);
             }
         }
     </script>
