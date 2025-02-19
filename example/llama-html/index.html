@@ -69,7 +69,7 @@
 
     <select id="model-src">
         <option value="localhost">localhost</option>
-        <option value="192.168.1.118">192.168.1.118</option>
+        <option value="192.168.1.13">192.168.1.13</option>
     </select>
     <button id="addModelBtn" onclick="addInstanceCard()">Add Model Instance (+)</button>
     <div class="container">
@@ -94,9 +94,10 @@
         };
 
         const localModelsPath = "/Users/pacominev/repos/ac/ac-dev/ilib-llama.cpp/tmp/"
+        const winModelsPath = "D:\\Repos\\ac\\ilib-llama.cpp\\tmp\\"
 
-        const localhost = "ws://localhost:7654";
-        const winLocalhost = "ws://192.168.1.118:7654";
+        // const localhost = "ws://localhost:7654";
+        // const winLocalhost = "ws://192.168.1.13:7654";
 
         let model2LogitData = new Map();
         let modelCount = 0; // Counter to generate unique IDs
@@ -158,8 +159,8 @@
             let genBtn = root.getElementsByClassName('gen-btn')[0];
             genBtn.addEventListener('click', () => sendPrompt(ws, root));
 
-            let getBtn = root.getElementsByClassName('get-data-btn')[0];
-            getBtn.addEventListener('click', () => getData(ws, root));
+            // let getBtn = root.getElementsByClassName('get-data-btn')[0];
+            // getBtn.addEventListener('click', () => getData(ws, root));
 
             let cmpBtn = root.getElementsByClassName('cmp-btn')[0];
             cmpBtn.addEventListener('click', () => compare(ws, root));
@@ -193,7 +194,6 @@
                 <button class="gen-btn">Generate</button>
                 <textarea class="out-generated" rows="5" cols="33">Generated text...</textarea>
 
-                <button class="get-data-btn">Get Data</button>
                 <button class="cmp-btn">Compare with other connections</button>
 
                 <p class="status">Waiting for input...</p>
@@ -208,13 +208,13 @@
         async function sendRequest(ws, data, errorCb) {
             const request = JSON.stringify(data);
             ws.send(request);
-            console.log(`Op - ${data.op}: Started`);
+            console.log(`Op [${ws.url}] - ${data.op}: Started`);
             if (data.op === "run" || data.op === "get-token-data" || data.op === "compare-tokens") {
                 return new Promise((resolve, reject) => {
                     ws.onmessage = (event) => {
                         const {data, op} = JSON.parse(event.data);
                         console.log(data);
-                        console.log(`Op - ${op}: Finished`);
+                        console.log(`Op [${ws.url}] - ${op}: Finished`);
                         resolve(data);
                     };
                 });
@@ -224,14 +224,14 @@
                         const response = JSON.parse(event.data);
                         console.log(response);
                         if (response.op.startsWith("s:")) {
-                            console.log(`Op - ${response.op}: Finished`);
+                            console.log(`Op [${ws.url}] - ${response.op}: Finished`);
                             // In the Acord we have 2 notifications
                             // 1 - the op itself and if there is an error
                             // 2 - the new state
                             // So we resolve only we receive the new state in order to continue
                             resolve(response);
                         } else {
-                            console.log(`Op - ${response.op}: Received`);
+                            console.log(`Op [${ws.url}] - ${response.op}: Received`);
                             if (response.op === "error") {
                                 errorCb(response);
                                 resolve(response);
@@ -272,8 +272,11 @@
                 let modelLoadBtn = root.getElementsByClassName(`load-model-btn`)[0];
 
                 let modelPath = "";
-                if (localhost === localhost) {
+                root.getElementsByClassName('host')[0].innerText
+                if (root.getElementsByClassName('host')[0].innerText === "localhost") {
                     modelPath = localModelsPath + modelInput.value;
+                } else {
+                    modelPath = winModelsPath + modelInput.value;
                 }
                 if (modelPath === "") {
                     setStatus(owner,"Please enter the path to the model!", LOG_LEVLEL.ERROR);
@@ -315,7 +318,10 @@
                 console.log(`Model: ${modelTitle.innerText} loaded!`);
 
                 await sendRequest(ws, {
-                    op: "start-instance"
+                    op: "start-instance",
+                    data: {
+                        ctx_size: 1024
+                    }
                 });
 
                 ws.acState = AC_STATES.INSTANCE_STARTED;
@@ -368,6 +374,8 @@
             } else {
                 setStatus(root,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
             }
+
+            getData(ws, root);
         }
 
         async function getData(ws, root) {
@@ -377,20 +385,19 @@
             }
 
             if (ws.acState === AC_STATES.INSTANCE_STARTED) {
-                setStatus(root, "Getting token data...", LOG_LEVLEL.INFO);
-
-                let btn = root.getElementsByClassName("get-data-btn")[0];
-                btn.disabled = true;
-                btn.style.opacity = "0.6";
+                // let btn = root.getElementsByClassName("get-data-btn")[0];
+                // btn.disabled = true;
+                // btn.style.opacity = "0.6";
 
                 const responseData = await sendRequest(ws, {
                         op: "get-token-data",
                     });
 
                 model2LogitData.set(root.id, responseData);
-                setStatus(root, "Getting data done!", LOG_LEVLEL.SUCCESS);
-                btn.disabled = false;
-                btn.style.opacity = "1";
+                console.log(`Data for model ${root.id} is: ${JSON.stringify(responseData)}`);
+
+                // btn.disabled = false;
+                // btn.style.opacity = "1";
             } else {
                 setStatus(root, "Model is not loaded yet!", LOG_LEVLEL.ERROR);
             }
@@ -416,30 +423,39 @@
                 const resultEl = document.getElementById("comparison-results");
                 resultEl.innerHTML = '';
 
-                const rootData = model2LogitData.get(root.id);
-                for (let [id, lastData] of model2LogitData) {
-                    if (root.id === id) {
-                        continue;
+                let logitData = Array.from(model2LogitData, ([name, data]) => ({ name, data }));
+                for (let i = 0; i < logitData.length; i++) {
+                    for (let j = i  + 1; j < logitData.length; j++) {
+                        // if (root.id === id) {
+                        //     continue;
+                        // }
+
+                        rootData = logitData[i].data;
+                        lastData = logitData[j].data;
+
+                        if (lastData.tokens.length === 0) {
+                            continue;
+                        }
+
+                        const responseData = await sendRequest(ws, {
+                                op: "compare-tokens",
+                                data: {
+                                    tokens1: rootData.tokens,
+                                    logits1: rootData.logits,
+                                    probs1: rootData.probs,
+                                    tokens2: lastData.tokens,
+                                    logits2: lastData.logits,
+                                    probs2: lastData.probs
+                                }
+                            });
+
+                        let el = document.createElement("div");
+                        el.innerHTML = `
+                            <h3>Model ${logitData[i].name} vs Model ${logitData[j].name}</h3>
+                            <p>Equal: ${responseData.equal ? "TRUE" : "FALSE"}</p>
+                        `;
+                        resultEl.appendChild(el);
                     }
-
-                    const responseData = await sendRequest(ws, {
-                            op: "compare-tokens",
-                            data: {
-                                tokens1: rootData.tokens,
-                                logits1: rootData.logits,
-                                probs1: rootData.probs,
-                                tokens2: lastData.tokens,
-                                logits2: lastData.logits,
-                                probs2: lastData.probs
-                            }
-                        });
-
-                    let el = document.createElement("div");
-                    el.innerHTML = `
-                        <h3>Model ${root.id} vs Model ${id}</h3>
-                        <p>Equal: ${responseData.equal ? "TRUE" : "FALSE"}</p>
-                    `;
-                    resultEl.appendChild(el);
                 }
 
                 setStatus(root, `Comparison finished!`, LOG_LEVLEL.SUCCESS);
