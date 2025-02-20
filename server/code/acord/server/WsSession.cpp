@@ -8,7 +8,6 @@
 
 #include <acord/CommonWsSession.hpp>
 
-#include <ac/frameio/local/LocalIoCtx.hpp>
 #include <ac/frameio/local/BufferedChannel.hpp>
 #include <ac/frameio/local/BufferedChannelStream.hpp>
 
@@ -30,7 +29,7 @@ public:
         );
 
         m_dispatch = std::move(local);
-        m_appCtx.io.connect(m_appCtx.sessionFactory.createHandler(), std::move(remote));
+        LocalSession_connect(m_appCtx, std::move(remote));
 
         tryReadFromDispatch();
     }

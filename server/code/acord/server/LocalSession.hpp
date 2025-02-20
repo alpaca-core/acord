@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: MIT
 //
 #pragma once
-#include <ac/frameio/SessionHandlerPtr.hpp>
+#include <ac/frameio/StreamEndpoint.hpp>
+
 namespace acord::server {
-class AssetMgr;
-struct LocalSessionFactory {
-    AssetMgr& assetMgr;
-    ac::frameio::SessionHandlerPtr createHandler();
-};
+struct AppCtx;
+void LocalSession_connect(const AppCtx& appCtx, ac::frameio::StreamEndpoint ep);
 } // namespace acord::server

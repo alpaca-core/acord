@@ -3,15 +3,16 @@
 //
 #pragma once
 
-namespace ac::frameio {
-class LocalIoCtx;
+namespace ac {
+namespace xec { class context; }
+namespace local { class IoCtx; }
 }
 
 namespace acord::server {
-struct LocalSessionFactory;
-
+class AssetMgr;
 struct AppCtx {
-    ac::frameio::LocalIoCtx& io;
-    LocalSessionFactory& sessionFactory;
+    ac::xec::context& localSessionXCtx;
+    ac::local::IoCtx& ioCtx;
+    AssetMgr& assetMgr;
 };
 } // namespace acord::server

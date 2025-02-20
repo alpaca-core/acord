@@ -35,7 +35,7 @@ endmacro()
 #######################################
 # packages
 
-add_ac_local(0.1.13)
+add_ac_local(0.1.15)
 
 if(ACORD_BUILD_TESTS)
     ac_dep(doctest-util)

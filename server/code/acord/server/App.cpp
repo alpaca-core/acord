@@ -14,12 +14,13 @@
 #include <ac/jalog/Instance.hpp>
 #include <ac/jalog/sinks/DefaultSink.hpp>
 
-#include <ac/frameio/local/LocalIoCtx.hpp>
+#include <ac/local/IoCtx.hpp>
 
 #include <fishnets/Context.hpp>
 #include <fishnets/WsServerHandler.hpp>
 #include <fishnets/util/WsSessionHandler.hpp>
 
+#include <ac/xec/context.hpp>
 #include <ac/xec/context_work_guard.hpp>
 
 #include <thread>
@@ -31,16 +32,16 @@
 namespace acord::server {
 
 struct App::Impl {
-    ac::frameio::LocalIoCtx io;
+    ac::local::IoCtx ioCtx;
+    ac::xec::context localSessionXCtx;
     ac::xec::context_work_guard wg;
     AssetMgr assetMgr;
-    LocalSessionFactory sessionFactory{assetMgr};
-    AppCtx ctx{io, sessionFactory};
+    AppCtx ctx{localSessionXCtx, ioCtx, assetMgr};
     fishnets::Context wsCtx;
     std::vector<std::thread> wsThreads;
 
     Impl(uint16_t wsPort)
-        : wg(io)
+        : wg(localSessionXCtx)
     {
 #ifdef HAVE_ACLP_OUT_DIR
         ac::local::Lib::addPluginDir(ACLP_OUT_DIR);
@@ -72,11 +73,11 @@ App::App(uint16_t wsPort)
 App::~App() = default;
 
 void App::run() {
-    m_impl->io.run();
+    m_impl->localSessionXCtx.run();
 }
 
 void App::stop() {
-    m_impl->io.stop();
+    m_impl->localSessionXCtx.stop();
 }
 
 } // namespace acord::server

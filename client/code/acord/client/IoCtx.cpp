@@ -29,7 +29,7 @@ public:
 struct IoCtx::Impl {
     fishnets::Context m_ctx;
     fishnets::ContextWorkGuard m_workGuard = m_ctx.makeWorkGuard();
-    astl::multi_thread_runner<fishnets::Context> m_threads;
+    astl::multi_thread_runner m_threads;
 
     Impl(size_t numThreads)
         : m_threads(m_ctx, numThreads)
