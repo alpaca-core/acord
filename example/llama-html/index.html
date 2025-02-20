@@ -62,6 +62,11 @@
         .status {
             margin-top: 10px;
         }
+
+        table, th, td {
+            border: 1px solid black;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -75,7 +80,8 @@
     <div class="container">
     </div>
 
-    <div id="comparison-results"></div>
+    <table id="comparison-table">
+    </table>
 
     <script>
         const LOG_LEVLEL = {
@@ -96,10 +102,9 @@
         const localModelsPath = "/Users/pacominev/repos/ac/ac-dev/ilib-llama.cpp/tmp/"
         const winModelsPath = "D:\\Repos\\ac\\ilib-llama.cpp\\tmp\\"
 
-        // const localhost = "ws://localhost:7654";
-        // const winLocalhost = "ws://192.168.1.13:7654";
-
+        let connections = new Map();
         let model2LogitData = new Map();
+        let modelComparesResult = [];
         let modelCount = 0; // Counter to generate unique IDs
 
         function setStatus(root, message, level) {
@@ -135,13 +140,21 @@
                 console.log(response);
             };
 
+            connections.set(root.id, {
+                ws: ws,
+                root: root
+            });
+
             return ws;
         }
 
-        async function prepareElements(root) {
+        async function prepareElementCallbacks(root) {
             let host = document.getElementById('model-src')
             let rootHostEl = root.getElementsByClassName('host')[0];
             rootHostEl.innerText = host.value;
+
+            // ========================================================================
+            // Prepare Acord WebSocket connection
 
             const ws = createWSConnection(`ws://${host.value}:7654`, root);
             ws.acState = AC_STATES.ERROR;
@@ -150,8 +163,18 @@
                 await new Promise((resolve) => setTimeout(resolve, 1000));
             }
 
-            await prepare(ws);
+            await sendRequest(ws, {
+                    op: "load_provider",
+                    data: {
+                        name: "llama.cpp"
+                    }
+                });
 
+            ws.acState = AC_STATES.INITIALIZED;
+            console.log(`Provider llama.cpp is initialized!`);
+
+            // ========================================================================
+            // Prepare buttons
 
             let loadBtn = root.getElementsByClassName('load-model-btn')[0]
             loadBtn.addEventListener('click', () => loadModel(ws, root));
@@ -159,11 +182,17 @@
             let genBtn = root.getElementsByClassName('gen-btn')[0];
             genBtn.addEventListener('click', () => sendPrompt(ws, root));
 
-            // let getBtn = root.getElementsByClassName('get-data-btn')[0];
-            // getBtn.addEventListener('click', () => getData(ws, root));
-
             let cmpBtn = root.getElementsByClassName('cmp-btn')[0];
-            cmpBtn.addEventListener('click', () => compare(ws, root));
+            cmpBtn.addEventListener('click', async () => {
+                modelComparesResult = [];
+                cleanUpTable();
+
+                await compare(ws, root);
+
+                for (let i = 0; i < modelComparesResult.length; i++) {
+                    addRowToTable(modelComparesResult[i].model1, modelComparesResult[i].model2, modelComparesResult[i].equal);
+                }
+            });
         }
 
         function addInstanceCard() {
@@ -183,25 +212,109 @@
                 <div class="host"></div>
                 <div class="model-title">Model ${modelCount}</div>
                 <div class="load-model-box">
-                    <input type="text" class="model-name" value="Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf">
+                    <select class="model-name"></select>
                     <input type="checkbox" class="use-gpu" checked name="useGpu"/>
                     <label class= "use-gpu-label" for="useGpu">Use GPU</label>
                     <button class="load-model-btn" >Load model</button>
                 </div>
                 <textarea class="prompt" rows="5" cols="33">Initial prompt...</textarea>
-                <input type="checkbox" class="tokenize-only" name="tokenize-only"/>
-                <label class= "tokenize-only-label" for="tokenize-only">Tokenize Only</label>
+                <input type="number" style="width:35px;" class="tokens-count" name="tokens-count" value="0"/>
+                <label class= "tokens-count" for="tokens-count">Max tokens to generate</label>
                 <button class="gen-btn">Generate</button>
-                <textarea class="out-generated" rows="5" cols="33">Generated text...</textarea>
 
                 <button class="cmp-btn">Compare with other connections</button>
 
                 <p class="status">Waiting for input...</p>
             `;
 
-            prepareElements(modelSection);
+            function addModelOptions(root) {
+                const models = [
+                    "Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf",
+                    "Meta-Llama-3.1-70B-Instruct-Q5_K_S.gguf",
+                    "llava-llama-3-8b-v1_1-f16.gguf",
+                    "BgGPT-Gemma-2-2B-IT-v1.0.Q8_0.gguf",
+                    "LLaMA-Mesh-Q6_K.gguf",
+                    "Thoth-Llama3.2-3B-IQ4_NL.gguf"
+                ];
 
-            // Append the new section to the container
+                const select = root.getElementsByClassName("model-name")[0];
+                if (!select) {
+                    console.error(`Select element with ID '${selectId}' not found.`);
+                    return;
+                }
+
+                for (let i = 0; i < models.length; i++) {
+                    const option = document.createElement("option");
+                    option.value = models[i];
+                    option.textContent = models[i];
+
+                    select.appendChild(option);
+                }
+            }
+
+            addModelOptions(modelSection);
+            prepareElementCallbacks(modelSection);
+
+            if (modelId == "model-1") {
+                let tokensCntEl = modelSection.getElementsByClassName("tokens-count")[0];
+                tokensCntEl.value = "1";
+
+                let iterativeCompareBtn = document.createElement("button");
+                iterativeCompareBtn.innerText = "Iterative Compare";
+                iterativeCompareBtn.addEventListener('click', async () => {
+                    iterativeCompareBtn.disabled = true;
+                    iterativeCompareBtn.style.opacity = "0.6";
+
+                    const model1Root = document.getElementById("model-1");
+                    const prompt = model1Root.getElementsByClassName("prompt")[0];
+                    const ws1 = connections.get("model-1").ws;
+
+                    if (ws1.acState !== AC_STATES.INSTANCE_STARTED) {
+                        setStatus(model1Root, "Model not loaded!", LOG_LEVLEL.ERROR);
+                        iterativeCompareBtn.disabled = false;
+                        iterativeCompareBtn.style.opacity = "1";
+                        return;
+                    }
+
+                    cleanUpTable();
+
+                    setStatus(model1Root, "Generating tokens for model 1...", LOG_LEVLEL.INFO);
+                    await sendPrompt(ws1, model1Root);
+
+                    for (let [modelId, connection] of connections) {
+                        if (modelId === "model-1") {
+                            continue;
+                        }
+
+                        const ws = connection.ws;
+                        const root = connection.root;
+
+                        // Set the currentPrompt
+                        root.getElementsByClassName("prompt")[0].value = prompt.value;
+
+                        // Tokenize with 0 max tokens to generate
+                        await sendPrompt(ws, root);
+                    }
+
+                    modelComparesResult = [];
+                    // Compare results
+                    await compare(ws1, model1Root);
+
+                    for (let i = 0; i < modelComparesResult.length; i++) {
+                        addRowToTable(modelComparesResult[i].model1, modelComparesResult[i].model2, modelComparesResult[i].equal);
+                    }
+
+                    setStatus(model1Root, "Iterative comparison complete.", LOG_LEVLEL.SUCCESS);
+                    iterativeCompareBtn.disabled = false;
+                    iterativeCompareBtn.style.opacity = "1";
+                });
+
+                let iterativeDescription = document.createElement("p");
+                iterativeDescription.innerHTML = "Iterative is automation of the buttons above. It compare will: <br>1. Generate N <em>(see \"Max tokens to generate\")</em> tokens <br> 2. Send the full prompt for tokenization to other instances <br>3. Compare them as a final step.";
+                modelSection.appendChild(iterativeDescription);
+                modelSection.appendChild(iterativeCompareBtn);
+            }
+
             document.querySelector(".container").appendChild(modelSection);
         }
 
@@ -240,18 +353,6 @@
                     };
                 });
             }
-       }
-
-       async function prepare(ws) {
-           await sendRequest(ws, {
-                    op: "load_provider",
-                    data: {
-                        name: "llama.cpp"
-                    }
-                });
-
-            ws.acState = AC_STATES.INITIALIZED;
-            console.log(`Provider stable-diffusion.cpp is initialized!`);
        }
 
         async function loadModel(ws, root) {
@@ -350,10 +451,9 @@
             }
 
             if (ws.acState === AC_STATES.INSTANCE_STARTED) {
-                const prompt = root.getElementsByClassName("prompt")[0].value;
+                const prompt = root.getElementsByClassName("prompt")[0];
                 const genBtn = root.getElementsByClassName("gen-btn")[0];
-                const output = root.getElementsByClassName("out-generated")[0];
-                const tokenizeOnly = root.getElementsByClassName("tokenize-only")[0].checked;
+                const tokensCount = root.getElementsByClassName("tokens-count")[0].value;
 
                 setStatus(root,"Generating...", LOG_LEVLEL.INFO);
 
@@ -362,20 +462,21 @@
                 const responseData = await sendRequest(ws, {
                         op: "run",
                         data: {
-                            prompt: prompt,
-                            max_tokens: tokenizeOnly ? 0 : 50
+                            prompt: prompt.value,
+                            max_tokens: parseInt(tokensCount),
                         }
                     });
-                output.value = prompt + responseData.result;
+                prompt.value = prompt.value + responseData.result;
 
                 setStatus(root,"Generation Done! Try again with a new prompt.", LOG_LEVLEL.SUCCESS);
                 genBtn.disabled = false;
                 genBtn.style.opacity = "1";
             } else {
                 setStatus(root,"Model is not loaded yet!", LOG_LEVLEL.ERROR);
+                return;
             }
 
-            getData(ws, root);
+            await getData(ws, root);
         }
 
         async function getData(ws, root) {
@@ -385,22 +486,87 @@
             }
 
             if (ws.acState === AC_STATES.INSTANCE_STARTED) {
-                // let btn = root.getElementsByClassName("get-data-btn")[0];
-                // btn.disabled = true;
-                // btn.style.opacity = "0.6";
-
                 const responseData = await sendRequest(ws, {
                         op: "get-token-data",
                     });
 
                 model2LogitData.set(root.id, responseData);
                 console.log(`Data for model ${root.id} is: ${JSON.stringify(responseData)}`);
-
-                // btn.disabled = false;
-                // btn.style.opacity = "1";
             } else {
                 setStatus(root, "Model is not loaded yet!", LOG_LEVLEL.ERROR);
             }
+        }
+
+        function cleanUpTable() {
+            const table = document.getElementById("comparison-table");
+            table.innerHTML = "";
+
+            // Create table header
+            const thead = document.createElement("thead");
+            thead.innerHTML = `
+                <tr>
+                    <th>Model 1 (GGUF)</th>
+                    <th>Model 2 (GGUF)</th>
+                    <th> Should be Equal </th>
+                    <th> Are Actually Equal </th>
+                    <th> Is comparison correct </th>
+                </tr>
+            `;
+
+            // Create table body
+            const tbody = document.createElement("tbody");
+            tbody.id = "comparisonTableBody";
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+        }
+
+        function addRowToTable(model1Id, model2Id, areEqual) {
+            const model1Root = document.getElementById(model1Id);
+            const model2Root = document.getElementById(model2Id);
+
+            const title1 = model1Root.getElementsByClassName("model-title")[0];
+            const title2 = model2Root.getElementsByClassName("model-title")[0];
+
+            const tbody = document.getElementById("comparisonTableBody");
+            // Create a new row
+            const row = document.createElement("tr");
+
+            // Model 1 Cell
+            const model1Cell = document.createElement("td");
+            model1Cell.style.padding = "10px"; // Add padding
+            model1Cell.textContent = title1.textContent;
+            const t1Split = title1.textContent.split(" ");
+            // model1Cell.style.backgroundColor = color1;
+
+            // Model 2 Cell
+            const model2Cell = document.createElement("td");
+            model2Cell.style.padding = "10px"; // Add padding
+            model2Cell.textContent = title2.textContent;
+            const t2split = title2.textContent.split(" ");
+            // model2Cell.style.backgroundColor = color2;
+
+            // Should be Equal
+            const shouldBeEqualCell = document.createElement("td");
+            const shouldBeEqualCellCheck = t1Split[t1Split.length -1] === t2split[t2split.length -1];
+            shouldBeEqualCell.textContent = shouldBeEqualCellCheck ? "✅ Yes" : "❌ No";
+
+            // Are Actually Equal Cell
+            const actualEqualCell = document.createElement("td");
+            actualEqualCell.textContent = areEqual ? "✅ Yes" : "❌ No";
+
+            const isComparisonCorrectCell = document.createElement("td");
+            isComparisonCorrectCell.textContent = shouldBeEqualCellCheck == areEqual ? "✅ Yes" : "❌ No";
+
+            // Append cells to row
+            row.appendChild(model1Cell);
+            row.appendChild(model2Cell);
+            row.appendChild(shouldBeEqualCell);
+            row.appendChild(actualEqualCell);
+            row.appendChild(isComparisonCorrectCell);
+
+            // Append row to table body
+            tbody.appendChild(row);
         }
 
         async function compare(ws, root) {
@@ -418,22 +584,16 @@
                 setStatus(root, "Comparing...", LOG_LEVLEL.INFO);
                 let btn = root.getElementsByClassName("cmp-btn")[0];
                 btn.disabled = true;
-                btn.style.opacity = "0.6";
-
-                const resultEl = document.getElementById("comparison-results");
-                resultEl.innerHTML = '';
+                btn.style.opacity = "0.6";;
 
                 let logitData = Array.from(model2LogitData, ([name, data]) => ({ name, data }));
                 for (let i = 0; i < logitData.length; i++) {
                     for (let j = i  + 1; j < logitData.length; j++) {
-                        // if (root.id === id) {
-                        //     continue;
-                        // }
-
                         rootData = logitData[i].data;
                         lastData = logitData[j].data;
 
-                        if (lastData.tokens.length === 0) {
+                        if (lastData.tokens.length === 0 ||
+                            rootData.tokens.length === 0) {
                             continue;
                         }
 
@@ -449,12 +609,11 @@
                                 }
                             });
 
-                        let el = document.createElement("div");
-                        el.innerHTML = `
-                            <h3>Model ${logitData[i].name} vs Model ${logitData[j].name}</h3>
-                            <p>Equal: ${responseData.equal ? "TRUE" : "FALSE"}</p>
-                        `;
-                        resultEl.appendChild(el);
+                        modelComparesResult.push({
+                            model1: logitData[i].name,
+                            model2: logitData[j].name,
+                            equal: responseData.equal
+                        })
                     }
                 }
 
