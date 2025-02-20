@@ -80,9 +80,6 @@
     <div class="container">
     </div>
 
-    <table id="comparison-table">
-    </table>
-
     <script>
         const LOG_LEVLEL = {
             INFO: 0,
@@ -148,6 +145,10 @@
             return ws;
         }
 
+        function removeAllTables() {
+            document.querySelectorAll("table").forEach(table => table.remove());
+}
+
         async function prepareElementCallbacks(root) {
             let host = document.getElementById('model-src')
             let rootHostEl = root.getElementsByClassName('host')[0];
@@ -185,14 +186,68 @@
             let cmpBtn = root.getElementsByClassName('cmp-btn')[0];
             cmpBtn.addEventListener('click', async () => {
                 modelComparesResult = [];
-                cleanUpTable();
+                removeAllTables();
+                let table = addTable();
 
                 await compare(ws, root);
 
                 for (let i = 0; i < modelComparesResult.length; i++) {
-                    addRowToTable(modelComparesResult[i].model1, modelComparesResult[i].model2, modelComparesResult[i].equal);
+                    addRowToTable(table, modelComparesResult[i].model1, modelComparesResult[i].model2, modelComparesResult[i].equal);
                 }
             });
+        }
+
+        async function automatedComparison(iterativeCompareBtn) {
+            iterativeCompareBtn.disabled = true;
+            iterativeCompareBtn.style.opacity = "0.6";
+
+            const model1Root = document.getElementById("model-1");
+            const prompt = model1Root.getElementsByClassName("prompt")[0];
+            const ws1 = connections.get("model-1").ws;
+
+            if (ws1.acState !== AC_STATES.INSTANCE_STARTED) {
+                setStatus(model1Root, "Model not loaded!", LOG_LEVLEL.ERROR);
+                iterativeCompareBtn.disabled = false;
+                iterativeCompareBtn.style.opacity = "1";
+                return;
+            }
+
+            let table = addTable();
+
+            setStatus(model1Root, "Generating tokens for model 1...", LOG_LEVLEL.INFO);
+            await sendPrompt(ws1, model1Root);
+
+            for (let [modelId, connection] of connections) {
+                if (modelId === "model-1") {
+                    continue;
+                }
+
+                const ws = connection.ws;
+                const root = connection.root;
+
+                // Set the currentPrompt
+                root.getElementsByClassName("prompt")[0].value = prompt.value;
+
+                // Tokenize with 0 max tokens to generate
+                await sendPrompt(ws, root);
+            }
+
+            modelComparesResult = [];
+            // Compare results
+            await compare(ws1, model1Root);
+
+            for (let i = 0; i < modelComparesResult.length; i++) {
+                addRowToTable(table, modelComparesResult[i].model1, modelComparesResult[i].model2, modelComparesResult[i].equal);
+            }
+
+            let caption = document.createElement("caption");
+            caption.innerText = "Prompt: " + prompt.value;
+            table.appendChild(caption);
+            document.body.appendChild(table);
+
+            setStatus(model1Root, "Iterative comparison complete.", LOG_LEVLEL.SUCCESS);
+            iterativeCompareBtn.disabled = false;
+            iterativeCompareBtn.style.opacity = "1";
         }
 
         function addInstanceCard() {
@@ -260,59 +315,26 @@
                 tokensCntEl.value = "1";
 
                 let iterativeCompareBtn = document.createElement("button");
+
+                let iterativeCmpCounter = document.createElement("input");
+                iterativeCmpCounter.type = "number";
+                iterativeCmpCounter.value = "1";
+                iterativeCmpCounter.style.width = "35px";
+                iterativeCmpCounter.style.marginLeft = "5px";
+
                 iterativeCompareBtn.innerText = "Iterative Compare";
                 iterativeCompareBtn.addEventListener('click', async () => {
-                    iterativeCompareBtn.disabled = true;
-                    iterativeCompareBtn.style.opacity = "0.6";
-
-                    const model1Root = document.getElementById("model-1");
-                    const prompt = model1Root.getElementsByClassName("prompt")[0];
-                    const ws1 = connections.get("model-1").ws;
-
-                    if (ws1.acState !== AC_STATES.INSTANCE_STARTED) {
-                        setStatus(model1Root, "Model not loaded!", LOG_LEVLEL.ERROR);
-                        iterativeCompareBtn.disabled = false;
-                        iterativeCompareBtn.style.opacity = "1";
-                        return;
+                    removeAllTables();
+                    for (let i = 0; i < parseInt(iterativeCmpCounter.value); i++) {
+                        await automatedComparison(iterativeCompareBtn);
                     }
-
-                    cleanUpTable();
-
-                    setStatus(model1Root, "Generating tokens for model 1...", LOG_LEVLEL.INFO);
-                    await sendPrompt(ws1, model1Root);
-
-                    for (let [modelId, connection] of connections) {
-                        if (modelId === "model-1") {
-                            continue;
-                        }
-
-                        const ws = connection.ws;
-                        const root = connection.root;
-
-                        // Set the currentPrompt
-                        root.getElementsByClassName("prompt")[0].value = prompt.value;
-
-                        // Tokenize with 0 max tokens to generate
-                        await sendPrompt(ws, root);
-                    }
-
-                    modelComparesResult = [];
-                    // Compare results
-                    await compare(ws1, model1Root);
-
-                    for (let i = 0; i < modelComparesResult.length; i++) {
-                        addRowToTable(modelComparesResult[i].model1, modelComparesResult[i].model2, modelComparesResult[i].equal);
-                    }
-
-                    setStatus(model1Root, "Iterative comparison complete.", LOG_LEVLEL.SUCCESS);
-                    iterativeCompareBtn.disabled = false;
-                    iterativeCompareBtn.style.opacity = "1";
                 });
 
                 let iterativeDescription = document.createElement("p");
                 iterativeDescription.innerHTML = "Iterative is automation of the buttons above. It compare will: <br>1. Generate N <em>(see \"Max tokens to generate\")</em> tokens <br> 2. Send the full prompt for tokenization to other instances <br>3. Compare them as a final step.";
                 modelSection.appendChild(iterativeDescription);
                 modelSection.appendChild(iterativeCompareBtn);
+                modelSection.appendChild(iterativeCmpCounter);
             }
 
             document.querySelector(".container").appendChild(modelSection);
@@ -497,8 +519,8 @@
             }
         }
 
-        function cleanUpTable() {
-            const table = document.getElementById("comparison-table");
+        function addTable() {
+            const table = document.createElement("table");
             table.innerHTML = "";
 
             // Create table header
@@ -515,43 +537,37 @@
 
             // Create table body
             const tbody = document.createElement("tbody");
-            tbody.id = "comparisonTableBody";
+            tbody.classList.add("comparisonTableBody");
 
             table.appendChild(thead);
             table.appendChild(tbody);
+
+            return table;
         }
 
-        function addRowToTable(model1Id, model2Id, areEqual) {
+        function addRowToTable(tableEl, model1Id, model2Id, areEqual) {
             const model1Root = document.getElementById(model1Id);
             const model2Root = document.getElementById(model2Id);
 
             const title1 = model1Root.getElementsByClassName("model-title")[0];
             const title2 = model2Root.getElementsByClassName("model-title")[0];
 
-            const tbody = document.getElementById("comparisonTableBody");
-            // Create a new row
             const row = document.createElement("tr");
 
-            // Model 1 Cell
             const model1Cell = document.createElement("td");
-            model1Cell.style.padding = "10px"; // Add padding
+            model1Cell.style.padding = "10px";
             model1Cell.textContent = title1.textContent;
             const t1Split = title1.textContent.split(" ");
-            // model1Cell.style.backgroundColor = color1;
 
-            // Model 2 Cell
             const model2Cell = document.createElement("td");
-            model2Cell.style.padding = "10px"; // Add padding
+            model2Cell.style.padding = "10px";
             model2Cell.textContent = title2.textContent;
             const t2split = title2.textContent.split(" ");
-            // model2Cell.style.backgroundColor = color2;
 
-            // Should be Equal
             const shouldBeEqualCell = document.createElement("td");
             const shouldBeEqualCellCheck = t1Split[t1Split.length -1] === t2split[t2split.length -1];
             shouldBeEqualCell.textContent = shouldBeEqualCellCheck ? "✅ Yes" : "❌ No";
 
-            // Are Actually Equal Cell
             const actualEqualCell = document.createElement("td");
             actualEqualCell.textContent = areEqual ? "✅ Yes" : "❌ No";
 
@@ -566,6 +582,7 @@
             row.appendChild(isComparisonCorrectCell);
 
             // Append row to table body
+            const tbody = tableEl.getElementsByClassName("comparisonTableBody")[0];
             tbody.appendChild(row);
         }
 
