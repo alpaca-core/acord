@@ -34,10 +34,11 @@ int main() try {
         ac::frameio::BufferedChannel_create(10)
     );
 
+    ac::frameio::BlockingIoCtx blockingCtx;
     acord::client::IoCtx acordIo;
     acordIo.connect(std::move(remote));
 
-    ac::schema::BlockingIoHelper io(std::move(local));
+    ac::schema::BlockingIoHelper io(std::move(local), blockingCtx);
 
     io.expectState<acrd::State>();
     auto files = io.call<acrd::State::OpMakeAssetsAvailable>(

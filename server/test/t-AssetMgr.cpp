@@ -16,6 +16,7 @@ TEST_CASE("noop") {
 }
 
 TEST_CASE("dl") {
+    ac::frameio::BlockingIoCtx ctx;
     AssetMgr mgr;
 
     std::vector<std::string> urls = {
@@ -24,7 +25,7 @@ TEST_CASE("dl") {
 
     auto ep = mgr.makeAssetsAvailable(urls);
 
-    ac::frameio::BlockingIo io(std::move(ep));
+    ac::frameio::BlockingIo io(std::move(ep), ctx);
 
     auto res = io.poll();
 

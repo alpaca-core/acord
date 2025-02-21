@@ -25,6 +25,7 @@ namespace asio = boost::asio;
 namespace acord::server {
 
 struct AssetMgr::Impl {
+    ac::frameio::BlockingIoCtx m_blockingCtx;
     asio::io_context m_ctx;
     asio::strand<asio::io_context::executor_type> m_strand{m_ctx.get_executor()};
     std::thread m_thread;
@@ -50,7 +51,7 @@ struct AssetMgr::Impl {
     void makeAssetsAvailable(std::vector<std::string>& assetUrls, ac::frameio::StreamEndpoint& ep) {
         std::vector<std::string> paths(assetUrls.size());
 
-        ac::frameio::BlockingIo io(std::move(ep));
+        ac::frameio::BlockingIo io(std::move(ep), m_blockingCtx);
 
         for (int i = 0; i < assetUrls.size(); ++i) {
             auto& url = assetUrls[i];
