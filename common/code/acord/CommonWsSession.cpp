@@ -32,7 +32,7 @@ void CommonWsSession::tryWriteToDispatch() {
     }
     auto res = m_dispatch.write_stream->write(*m_receiving, [&] {
         return [this, pl = shared_from_this()] {
-            postWsIoTask([this, pl = shared_from_this()]() {
+            postWsIoTask([this]() {
                 tryWriteToDispatch();
             });
         };
@@ -84,7 +84,7 @@ void CommonWsSession::tryReadFromDispatch() {
     ac::Frame frame;
     auto res = m_dispatch.read_stream->read(frame, [this] {
         return [this, pl = shared_from_this()] {
-            postWsIoTask([this, pl = shared_from_this()]() {
+            postWsIoTask([this]() {
                 tryReadFromDispatch();
             });
         };

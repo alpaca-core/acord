@@ -8,12 +8,6 @@
 #include <fishnets/ExecutorPtr.hpp>
 #include <fishnets/Post.hpp>
 
-namespace fishnets {
-inline void post(const fishnets::ExecutorPtr& ex, fishnets::Task task) {
-    fishnets::Executor_post(*ex, std::move(task));
-}
-}
-
 namespace acord {
 
 class WsSessionHandlerWobj final : public ac::xec::notifiable {
