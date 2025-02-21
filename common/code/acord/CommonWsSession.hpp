@@ -13,7 +13,7 @@ namespace acord {
 class ACORD_COMMON_API CommonWsSession : public fishnets::WsSessionHandler {
 protected:
     ~CommonWsSession();
-    FrameCvt m_cvt = FrameCvt::json();
+    FrameCvt m_cvt;
     ac::frameio::StreamEndpoint m_dispatch;
 
     std::optional<ac::Frame> m_receiving;

@@ -11,6 +11,13 @@ namespace acord {
 CommonWsSession::~CommonWsSession() = default;
 
 void CommonWsSession::wsOpened(std::string_view target) {
+    if (target == "/cbor") {
+        m_cvt = FrameCvt::cbor();
+    }
+    else {
+        m_cvt = FrameCvt::json();
+    }
+
     wsReceive();
 }
 

@@ -57,7 +57,7 @@ void IoCtx::connect(
     uint16_t port
 ) {
     auto session = std::make_shared<WsSession>(std::move(localEndpoint));
-    m_impl->m_ctx.wsConnect(std::move(session), fishnets::EndpointInfo{"127.0.0.1", port});
+    m_impl->m_ctx.wsConnect(std::move(session), fishnets::EndpointInfo{"127.0.0.1", port}, "/cbor");
 }
 
 } // namespace acord::client
