@@ -7,10 +7,15 @@
 #include <memory>
 
 namespace acord::server {
-
+struct AppParams {
+    uint16_t wsPort = Default_WsPort;
+    bool serveLocalhostOnly = true;
+};
 class ACORD_SERVER_API App {
 public:
-    App(uint16_t wsPort = Default_WsPort);
+
+
+    App(AppParams params = {});
     ~App();
 
     App(const App&) = delete;

@@ -40,7 +40,7 @@ struct App::Impl {
     fishnets::Context wsCtx;
     std::vector<std::thread> wsThreads;
 
-    Impl(uint16_t wsPort)
+    Impl(AppParams params)
         : wg(localSessionXCtx)
     {
 #ifdef HAVE_ACLP_OUT_DIR
@@ -48,15 +48,16 @@ struct App::Impl {
 #endif
         ac::local::Lib::loadAllPlugins();
 
-        fishnets::EndpointInfo info;
-        info.address = "192.168.1.13";
-        info.port = wsPort;
-        wsCtx.wsServe(info, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
-            return makeWsSession(ctx);
+        if (params.serveLocalhostOnly) {
+            wsCtx.wsServeLocalhost(params.wsPort, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
+                return makeWsSession(ctx);
             }));
-        /*wsCtx.wsServeLocalhost(wsPort, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
-            return makeWsSession(ctx);
-        }));*/
+        } else {
+            wsCtx.wsServe(fishnets::EndpointInfo{"0.0.0.0", params.wsPort}, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
+                return makeWsSession(ctx);
+                }));
+        }
+
         for (int i = 0; i < 3; ++i) {
             wsThreads.emplace_back([this] {
                 wsCtx.run();
@@ -72,8 +73,8 @@ struct App::Impl {
     }
 };
 
-App::App(uint16_t wsPort)
-    : m_impl(std::make_unique<Impl>(wsPort))
+App::App(AppParams params)
+    : m_impl(std::make_unique<Impl>(std::move(params)))
 {}
 
 App::~App() = default;
