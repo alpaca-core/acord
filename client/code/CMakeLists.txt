@@ -9,6 +9,8 @@ target_sources(acord-client
         acord/client/api.h
         acord/client/IoCtx.hpp
     PRIVATE
+        acord/client/Logging.hpp
+        acord/client/Logging.cpp
         acord/client/IoCtx.cpp
 )
 

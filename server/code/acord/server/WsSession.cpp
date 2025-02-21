@@ -21,8 +21,8 @@ public:
     {}
 
     void wsOpened(std::string_view target) override {
+        ACORD_SRV_LOG(Info, "Session opened: ", target);
         CommonWsSession::wsOpened(target);
-        ACORD_SRV_LOG(Info, "Session opened");
         auto [local, remote] = ac::frameio::BufferedChannel_getEndpoints(
             ac::frameio::BufferedChannel_create(10),
             ac::frameio::BufferedChannel_create(10)
@@ -32,6 +32,11 @@ public:
         LocalSession_connect(m_appCtx, std::move(remote));
 
         tryReadFromDispatch();
+    }
+
+    void wsClosed(std::string reason) override {
+        ACORD_SRV_LOG(Info, "Session closed: ", reason);
+        CommonWsSession::wsClosed(std::move(reason));
     }
 };
 

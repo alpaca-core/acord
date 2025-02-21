@@ -9,7 +9,7 @@ using namespace acord::server;
 
 int main() {
     ac::jalog::Instance jl;
-    jl.setup().add<ac::jalog::sinks::DefaultSink>();
+    jl.setup().async().add<ac::jalog::sinks::DefaultSink>();
 
     App app;
     app.run();

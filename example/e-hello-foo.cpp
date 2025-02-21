@@ -23,7 +23,7 @@ namespace foo = ac::schema::foo;
 
 int main() try {
     ac::jalog::Instance jl;
-    jl.setup().add<ac::jalog::sinks::DefaultSink>();
+    jl.setup().async().add<ac::jalog::sinks::DefaultSink>();
 
 #if SAME_PROCESS_SERVER
     acord::server::AppRunner appRunner;

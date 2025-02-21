@@ -11,12 +11,10 @@ namespace acord {
 CommonWsSession::~CommonWsSession() = default;
 
 void CommonWsSession::wsOpened(std::string_view target) {
-    AC_JALOG(Info, "Session opened: ", target);
     wsReceive();
 }
 
 void CommonWsSession::wsClosed(std::string reason) {
-    AC_JALOG(Info, "Session closed: ", reason);
     m_dispatch.read_stream->close();
     m_dispatch.write_stream->close();
 }

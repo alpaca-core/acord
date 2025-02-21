@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 //
 #include "IoCtx.hpp"
+#include "Logging.hpp"
 
 #include <acord/CommonWsSession.hpp>
 #include <fishnets/Context.hpp>
@@ -20,8 +21,13 @@ public:
         m_dispatch = std::move(ep);
     }
     virtual void wsOpened(std::string_view target) override {
+        ACORD_CLIENT_LOG(Info, "Session opened: ", target);
         CommonWsSession::wsOpened(target);
         tryReadFromDispatch();
+    }
+    void wsClosed(std::string reason) override {
+        ACORD_CLIENT_LOG(Info, "Session closed: ", reason);
+        CommonWsSession::wsClosed(std::move(reason));
     }
 };
 } // namespace
