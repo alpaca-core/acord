@@ -13,21 +13,20 @@
 #include <ahttp/ahttp.hpp>
 #include <astl/move_capture.hpp>
 
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/strand.hpp>
+#include <ac/xec/context.hpp>
+#include <ac/xec/context_work_guard.hpp>
+#include <ac/xec/post.hpp>
 
 #include <thread>
 #include <fstream>
 #include <unordered_map>
 
-namespace asio = boost::asio;
-
 namespace acord::server {
 
 struct AssetMgr::Impl {
     ac::frameio::BlockingIoCtx m_blockingCtx;
-    asio::io_context m_ctx;
-    asio::strand<asio::io_context::executor_type> m_strand{m_ctx.get_executor()};
+    ac::xec::context m_xctx;
+    ac::xec::strand m_strand{m_xctx.make_strand()};
     std::thread m_thread;
 
     std::vector<std::string> m_localDirs;
@@ -38,13 +37,13 @@ struct AssetMgr::Impl {
         fs::mkdir_p(m_localDirs.front());
 
         m_thread = std::thread([this]() {
-            auto guard = make_work_guard(m_ctx);
-            m_ctx.run();
+            auto guard = m_xctx.make_work_guard();
+            m_xctx.run();
         });
     }
 
     ~Impl() {
-        m_ctx.stop();
+        m_xctx.stop();
         m_thread.join();
     }
 

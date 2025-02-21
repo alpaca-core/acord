@@ -39,7 +39,6 @@ target_link_libraries(acord-server
     PRIVATE
         ac::jalog
         acord::http
-        Boost::asio
 )
 
 if(TARGET aclp::out-dir)
