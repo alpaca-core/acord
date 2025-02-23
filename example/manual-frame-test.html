@@ -1,25 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script type="module">
+import { encode, decode } from 'https://cdn.jsdelivr.net/npm/cbor-x@1.6.0/+esm'
+window.cborX = { encode, decode };
+</script>
+
 <script language="javascript" type="text/javascript">
 "use strict";
-// Copyright (c) Borislav Stanimirov
+
+// Copyright (c) Alpaca Core
 // SPDX-License-Identifier: MIT
 //
+var cborX;
 var output;
+var cbor = false;
 var ws;
 
 function init() {
     output = document.getElementById("output");
+    cborX = window.cborX;
+}
 
-    let wsUri = 'ws://' + window.location.hostname+ ':7654';
+function disconnect() {
+    ws.close();
+}
+
+function connect() {
+    cbor = document.getElementById('connect_cbor').checked;
+
+    let wsUri = 'ws://' + window.location.hostname + ':7654';
+    if (cbor) {
+        wsUri += '/cbor';
+    }
 
     ws = new WebSocket(wsUri);
+    ws.binaryType = 'arraybuffer';
     ws.onopen = () => {
         writeToScreen('CONNECTED');
+
+        let cbut = document.getElementById('connect');
+        cbut.innerHTML = 'Disconnect';
+        cbut.onclick = disconnect;
     };
-    ws.onclose = () => writeToScreen('<p style="color: red;">DISCONNECTED</p>');
-    ws.onmessage = msg => writeToScreen('<p style="color: blue;">RESPONSE: ' + msg.data + '</p>');
+    ws.onclose = () => {
+        writeToScreen('<p style="color: red;">DISCONNECTED</p>');
+
+        let cbut = document.getElementById('connect');
+        cbut.innerHTML = 'Connect';
+        cbut.onclick = connect;
+    }
+    ws.onmessage = msg => {
+        if (cbor) {
+            const obj = cborX.decode(new Uint8Array(msg.data));
+            writeToScreen('<p style="color: blue;">RESPONSE: ' + JSON.stringify(obj) + '</p>');
+        } else {
+            writeToScreen('<p style="color: blue;">RESPONSE: ' + msg.data + '</p>');
+        }
+    }
     ws.onerror = msg => writeToScreen('<p style="color: red;">ERROR: ' + msg.data + '</p>');
 }
 
@@ -36,7 +74,11 @@ function writeToScreen(message) {
 
 function doSend(message) {
     writeToScreen("SENT: " + message);
-    ws.send(message);
+    if (cbor) {
+        ws.send(cborX.encode(JSON.parse(message)));
+    } else {
+        ws.send(message);
+    }
 }
 
 window.addEventListener('load', init, false);
@@ -45,25 +87,32 @@ function wsSend() {
     doSend(document.getElementById('data_to_send').value);
 }
 
-function wsSendBinary() {
-    const array = new Float32Array(5);
-
-    for (var i = 0; i < array.length; ++i) {
-        array[i] = i / 2;
-    }
-    doSend(array);
-}
 </script>
+<style type="text/css">
+.but {
+    font-size: 1.3em;
+}
+
+.check {
+    width: 20px;
+    height: 20px;
+}
+</style>
 </head>
 <body style="font-family: sans-serif; font-size: 1.5em">
     <h1>Manual Frame Writer</h1>
+
+    <div>
+        <button class="but" id="connect" onClick="connect()">Connect</button>
+        <input  type="checkbox" class="check" id="connect_cbor" />
+        <label for="connect_cbor">CBOR</label>
+    </div>
 
     <div style="margin: 10px 0">
         <input style="font-size: 1.3em; width: 90%" type="text" id="data_to_send" value="{&quot;op&quot;: &quot;xx&quot;, &quot;data&quot;: {}}">
     </div>
     <div>
-        <button style="font-size: 1.3em" id="sender" onClick="wsSend()">Send</button>
-        <button style="font-size: 1.3em" id="sender_binary" onClick="wsSendBinary()">Send Binary</button>
+        <button class="but" id="sender" onClick="wsSend()">Send</button>
     </div>
 
     <div id="output"></div>
