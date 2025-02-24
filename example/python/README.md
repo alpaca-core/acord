@@ -1,33 +1,21 @@
-This is an pretty simple example app of stable-diffusion.cpp plugin integration
-using Python's Gradio library as a frontend. To run the example
-follow the commands:
+# Acord Python Examples
 
-0. Add `ilib-sd.cpp` as a local plugin in root `CMakeLists.txt`.
+## Requirements
 
-Example:
+We have an amalgamated `reuquirements.txt` file that contains the required packages for all the examples. You can install it with:
 
-```
-    make_ac_local_plugin_available(
-        NAME ilib-sd.cpp
-        VERSION 1.0.0
-        GITHUB alpaca-core/ilib-sd.cpp
-    )
+```bash
+$ python3 -m pip install -r requirements.txt
 ```
 
+... or install them individually as needed with your favorite package manager under your favorite environment manager.
 
-1. Install the Python's required packages
 
-```
-    python3 -m pip install -r requirements.txt
-```
+## Running the examples
 
-2. Run the acord server
+* Make sure you have `acord` running
+* `$ python <example>.py`
 
-3. Start the gradio app
+## Examples
 
-```
-python app.py
-```
-
-You need to have the models downloaded already in the filesystem. You can pass
-it to the `model_path` input field or hardcode the model you want directly in the `app.py` code.
+* `stable-diffusion-gradio.py`: A simple example of a image generation based on Stable Diffusion equation with a gradio interface.

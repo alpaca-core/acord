@@ -13,9 +13,12 @@
 
 #include <iostream>
 
-#define SAME_PROCESS_SERVER 1
+#if !defined(SAME_PROCESS_SERVER)
+#   define SAME_PROCESS_SERVER 1
+#endif
+
 #if SAME_PROCESS_SERVER
-#include <acord/server/AppRunner.hpp>
+#   include <acord/server/AppRunner.hpp>
 #endif
 
 namespace acrd = ac::schema::acord;
