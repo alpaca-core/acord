@@ -48,15 +48,19 @@ struct App::Impl {
 #endif
         ac::local::Lib::loadAllPlugins();
 
+        std::vector<fishnets::EndpointInfo> endpoints;
         if (params.serveLocalhostOnly) {
-            wsCtx.wsServeLocalhost(params.wsPort, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
-                return makeWsSession(ctx);
-            }));
-        } else {
-            wsCtx.wsServe(fishnets::EndpointInfo{"0.0.0.0", params.wsPort}, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
-                return makeWsSession(ctx);
-                }));
+            endpoints.push_back({"127.0.0.1", params.wsPort});
+            endpoints.push_back({"::1", params.wsPort});
         }
+        else{
+            endpoints.push_back({fishnets::IPv4, params.wsPort});
+            endpoints.push_back({fishnets::IPv6, params.wsPort});
+        }
+
+        wsCtx.wsServe(endpoints, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
+            return makeWsSession(ctx);
+        }));
 
         for (int i = 0; i < 3; ++i) {
             wsThreads.emplace_back([this] {
