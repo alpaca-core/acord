@@ -11,8 +11,8 @@ class AppRunner {
     App m_app;
     std::thread m_thread;
 public:
-    AppRunner(uint16_t wsPort = Default_WsPort)
-        : m_app(wsPort)
+    AppRunner(AppParams params = {})
+        : m_app(std::move(params))
     {
         m_thread = std::thread([&] {
             m_app.run();
