@@ -159,6 +159,15 @@
     {
       "name": "release-ci",
       "inherits": ["base-release", "standalone", "asan", "ubsan", "lsan"]
+    },
+
+    {
+      "name": "debug-demo",
+      "inherits": ["base-debug", "standalone"]
+    },
+    {
+      "name": "release-demo",
+      "inherits": ["base-release", "standalone"]
     }
   ]
 }
