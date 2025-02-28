@@ -1,38 +1,38 @@
+<!-- Copyright (c) Alpaca Core -->
+<!-- SPDX-License-Identifier: MIT -->
+
 <!DOCTYPE html>
-<head>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>acord Demos</title>
-</head>
-<style>
-    body {
-        font-family: sans-serif;
-        background: grey;
-    }
-    .content {
-        margin: 0 auto;
-        width: 50%;
-        padding: 10px;
-        background: white;
-    }
-    @media (max-width: 800px) {
-        .content {
-            width: 100%;
-        }
-    }
-</style>
-<body>
-    <div class="content">
-        <h1>acord Demos</h1>
-        <section>
-            <h2><a href="manual-frame-test.html">manual-frame-test</a></h2>
-            <p>
-                A trivial client which can sends manually written json frames to the server and logs the server's responses.
-            </p>
-        </section>
-        <section>
-            <h2><a href="stable-diffusion.html">stable-diffusion</a></h2>
-            <p>
-                Image engeration with <a href="https://stability.ai/stable-image">Stable Diffusion</a>.
-            </p>
-        </section>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="./alpaca-core-logo.png" type="image/png" />
+  </head>
+  <body>
+    <div class="left-align-content">
+      <header class="header-row">
+        <h1>Alpaca Core / acord Demos</h1>
+      </header>
+      <section>
+        <h2><a href="manual-frame-test.html">manual-frame-test</a></h2>
+        <p>
+          A trivial client which can sends manually written JSON frames to the
+          server and logs the server's responses.
+        </p>
+      </section>
+      <section>
+        <h2><a href="stable-diffusion.html">stable-diffusion</a></h2>
+        <p>
+          Image generation with
+          <a href="https://stability.ai/stable-image">Stable Diffusion</a>.
+        </p>
+      </section>
+      <section>
+        <h2><a href="chat.html">chat</a></h2>
+        <p>Chat with receiving and sending messages</p>
+      </section>
     </div>
-</body>
+  </body>
+</html>
