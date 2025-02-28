@@ -7,7 +7,7 @@ The Alpaca Core daemon. A daemon that provides a WebSocket API for the [Alpaca C
 > [!IMPORTANT]
 > This project is still in in an alpha stage of development. Significant changes are very likely, or rather, certain, and backwards compatibility is disregarded.
 
-The current release is a preview of daemon and SDK along with several AI-based demos.
+The current release is a preview of the daemon with several AI-based demos.
 
 ## Preview Info and Limitations
 
@@ -16,7 +16,6 @@ This preview release loads several hard-coded plugins for AI inference of concre
 * [ilib-llama.cpp](https://github.com/alpaca-core/ilib-llama.cpp): Multiple LLM-s wrapping [ggerganov/llama.cpp](https://github.com/ggerganov/llama.cpp)
 * [ilib-whisper.cpp](https://github.com/alpaca-core/ilib-whisper.cpp): Whisper ASR wrapping [ggerganov/whisper.cpp](https://github.com/ggerganov/whisper.cpp)
 * [ilib-sd.cpp](https://github.com/alpaca-core/ilib-sd.cpp): Image generation with Stable Diffusion wrapping [leejet/stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp)
-* [ilib-ac-tortoise](https://github.com/alpaca-core/ilib-ac-tortoise): TTS with tortoise. Based on [balisujohn/tortoise.cpp](https://github.com/balisujohn/tortoise.cpp)
 
 For all of these the supported compute backends for now are CPU, CUDA and Metal on Apple Silicon.
 
@@ -52,6 +51,42 @@ Or on Windows
 ## Running the Demos
 
 Follow the instructions for the individual demos in the [example](example) directory.
+
+## Making Your Own Apps
+
+Feel free to experiment and make your own apps. You can do them in any language you want as long as you have a WebSocket client library.
+
+## Contributing
+
+As mentioned above, the project is still in an alpha stage of development. We are open to contributions, but please be aware that the codebase is still very much in flux. If you're thinking of doing something more than a minor change, please open an issue or a discussion first.
+
+## Roadmap
+
+Here's a list of the major acord-related features we're planning to work on in the coming weeks on the road to beta.
+
+> Most of the work for the roadmap will be done in [alpaca-core/alpaca-core-sdk](https://github.com/alpaca-core/alpaca-core-sdk/) and the other repos.
+
+* Specify and implement a more robust schema system. This includes:
+    * Specifying schema definitions
+    * Defining schema-based codegen
+    * Defining the frame format and the schema-based serialization/deserialization
+    * Defining a schema distribution system (a package manager of sorts)
+* Refine and improve features of the existing plugins. Some priorities include:
+    * Video generation via Stable Diffusion
+    * Improving llama.cpp-based chat
+* Add more plugins. Some priorities here include:
+    * Text-to-speech
+    * Alternative LLM plugin
+* Support more compute backends
+* Improve asset management
+* Create an installable package for the daemon
+* Create some actual acord-based applications as opposed to just demos and examples. Ideas are welcome here!
+
+Some more distant goals include:
+
+* Add a basic authentication system so people can choose to expose acord to the internet
+* Create an AI model repository so models could queried by features and tags, and accessed by id
+* Create a plugin repository and a plugin management system
 
 ## License
 
