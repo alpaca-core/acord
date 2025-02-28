@@ -1,120 +1,38 @@
 <!DOCTYPE html>
 <html>
-<head>
-<script type="module">
-import { encode, decode } from 'https://cdn.jsdelivr.net/npm/cbor-x@1.6.0/+esm'
-window.cborX = { encode, decode };
-</script>
-
-<script language="javascript" type="text/javascript">
-"use strict";
-
-// Copyright (c) Alpaca Core
-// SPDX-License-Identifier: MIT
-//
-var cborX;
-var output;
-var cbor = false;
-var ws;
-
-function init() {
-    output = document.getElementById("output");
-    cborX = window.cborX;
-}
-
-function disconnect() {
-    ws.close();
-}
-
-function connect() {
-    cbor = document.getElementById('connect_cbor').checked;
-
-    let wsUri = 'ws://' + window.location.hostname + ':7654';
-    if (cbor) {
-        wsUri += '/cbor';
-    }
-
-    ws = new WebSocket(wsUri);
-    ws.binaryType = 'arraybuffer';
-    ws.onopen = () => {
-        writeToScreen('CONNECTED');
-
-        let cbut = document.getElementById('connect');
-        cbut.innerHTML = 'Disconnect';
-        cbut.onclick = disconnect;
-    };
-    ws.onclose = () => {
-        writeToScreen('<p style="color: red;">DISCONNECTED</p>');
-
-        let cbut = document.getElementById('connect');
-        cbut.innerHTML = 'Connect';
-        cbut.onclick = connect;
-    }
-    ws.onmessage = msg => {
-        if (cbor) {
-            const obj = cborX.decode(new Uint8Array(msg.data));
-            writeToScreen('<p style="color: blue;">RESPONSE: ' + JSON.stringify(obj) + '</p>');
-        } else {
-            writeToScreen('<p style="color: blue;">RESPONSE: ' + msg.data + '</p>');
-        }
-    }
-    ws.onerror = msg => writeToScreen('<p style="color: red;">ERROR: ' + msg.data + '</p>');
-}
-
-function writeToScreen(message) {
-    let p = document.createElement('p');
-    p.style.wordWrap = 'break-word';
-    p.innerHTML = message;
-
-    if (output.childNodes.length > 5) {
-        output.removeChild(output.childNodes[0]);
-    }
-    output.appendChild(p);
-}
-
-function doSend(message) {
-    writeToScreen("SENT: " + message);
-    if (cbor) {
-        ws.send(cborX.encode(JSON.parse(message)));
-    } else {
-        ws.send(message);
-    }
-}
-
-window.addEventListener('load', init, false);
-
-function wsSend() {
-    doSend(document.getElementById('data_to_send').value);
-}
-
-</script>
-<style type="text/css">
-.but {
-    font-size: 1.3em;
-}
-
-.check {
-    width: 20px;
-    height: 20px;
-}
-</style>
-</head>
-<body style="font-family: sans-serif; font-size: 1.5em">
-    <h1>Manual Frame Writer</h1>
-
-    <div>
-        <button class="but" id="connect" onClick="connect()">Connect</button>
-        <input  type="checkbox" class="check" id="connect_cbor" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Frame Writer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="manual-frame-test.js"></script>
+    <link rel="icon" href="./alpaca-core-logo.png" type="image/png" />
+  </head>
+  <body>
+    <header class="header-row">
+      <h1>Manual Frame Writer</h1>
+      <div class="connection-controls">
+        <button class="connect-button" id="connect" onClick="connect()">
+          Connect
+        </button>
+        <input type="checkbox" class="check" id="connect_cbor" />
         <label for="connect_cbor">CBOR</label>
+      </div>
+    </header>
+    <section>
+      <div class="commands-header">
+        <h2>Last Commands</h2>
+        <button class="clear-all-button" onClick="clearAllCommands()">
+          Clear All
+        </button>
+      </div>
+      <ul id="last_commands"></ul>
+    </section>
+    <div class="input-row">
+      <input type="text" id="data_to_send" value='{"op": "xx", "data": {}}' />
+      <button id="sender" onClick="wsSend()">Send</button>
+      <button class="clear-input-button" onClick="clearInput()">Clear</button>
     </div>
-
-    <div style="margin: 10px 0">
-        <input style="font-size: 1.3em; width: 90%" type="text" id="data_to_send" value="{&quot;op&quot;: &quot;xx&quot;, &quot;data&quot;: {}}">
-    </div>
-    <div>
-        <button class="but" id="sender" onClick="wsSend()">Send</button>
-    </div>
-
     <div id="output"></div>
-</body>
+  </body>
 </html>
