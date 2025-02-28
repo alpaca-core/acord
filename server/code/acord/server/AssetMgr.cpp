@@ -93,9 +93,14 @@ struct AssetMgr::Impl {
                 auto gen = ahttp::get_sync(url);
                 std::vector<uint8_t> buf(1024 * 1024);
 
+                int tmb = 0;
                 while (!gen.done()) {
                     auto chunk = gen.get_next_chunk(buf);
                     ofs.write((const char*)chunk.data(), chunk.size());
+                    ++tmb;
+                    if (tmb % 10 == 0) {
+                        ACORD_SRV_LOG(Info, tmb/10, " MB downloading ", url);
+                    }
                 }
                 ofs.close();
 
