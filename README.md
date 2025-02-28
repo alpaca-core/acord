@@ -24,7 +24,11 @@ If your device does not support CUDA or Metal, you can run on CPU, but all the d
 
 ## Build and Run Acord
 
-CMake 3.24+ and a C++20 capable compiler are required.
+CMake 3.24+ and a C++20 capable compiler are required. Ninja is also required if you use the provided presets.
+
+Instructions for setting up the recommended build environment for various platforms can be found [here](https://github.com/alpaca-core/alpaca-core-sdk/blob/master/doc/dev/dev-env.md)
+
+If you have CMake, Ninja and a C++20 compiler installed, you should be able to build acord with the following commands:
 
 ```bash
 $ git clone https://github.com/alpaca-core/acord.git
