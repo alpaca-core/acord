@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <sys/stat.h>
 #if defined(_WIN32)
-#   define stat _stat
+#   define stat _stat64
 #endif
 
 namespace acord::server::fs {
@@ -78,7 +78,7 @@ std::string expandPath(std::string_view path) {
 
 BasicStat basicStat(const std::string& path) noexcept {
     struct stat st;
-    if (stat(path.data(), &st) != 0) {
+    if (stat(path.c_str(), &st) != 0) {
         return {BasicStat::NotExist, 0};
     }
     if (st.st_mode & S_IFREG) {
