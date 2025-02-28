@@ -1,3 +1,6 @@
+// Copyright (c) Alpaca Core
+// SPDX-License-Identifier: MIT
+//
 #include <acord/client/IoCtx.hpp>
 #include <acord/schema/Acord.hpp>
 
@@ -14,7 +17,7 @@
 #include <iostream>
 
 #if !defined(SAME_PROCESS_SERVER)
-#   define SAME_PROCESS_SERVER 1
+#   define SAME_PROCESS_SERVER 0
 #endif
 
 #if SAME_PROCESS_SERVER
