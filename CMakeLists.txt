@@ -47,14 +47,20 @@ endif()
 if(NOT AC_BUILD_DEPLOY)
     make_ac_local_plugin_available(
         NAME ilib-foo
-        VERSION 1.0.0
+        VERSION 0.1.0
         GITHUB alpaca-core/ilib-foo
     )
 
     make_ac_local_plugin_available(
         NAME ilib-llama.cpp
-        VERSION 1.0.0
+        VERSION 0.1.0
         GITHUB alpaca-core/ilib-llama.cpp
+    )
+
+    make_ac_local_plugin_available(
+        NAME ilib-sd.cpp
+        VERSION 0.1.0
+        GITHUB alpaca-core/ilib-sd.cpp
     )
 endif()
 
