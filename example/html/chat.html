@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="chat.js"></script>
+    <link rel="icon" href="./alpaca-core-logo.png" type="image/png" />
+  </head>
+  <body>
+    <header class="header-row">
+      <h1>Chat</h1>
+    </header>
+    <div class="input-row">
+      <input type="text" id="model" placeholder="Enter Model Path" />
+      <button id="loadBtn" onclick="loadModel()">Load</button>
+      <button
+        id="clearLoadBtn"
+        class="clear-input-button"
+        onclick="clearLoadModelInput()"
+        onClick="clearInput()"
+      >
+        Clear
+      </button>
+    </div>
+    <p id="status"></p>
+    <div id="output"></div>
+    <div class="input-row">
+      <input type="text" id="data_to_send" placeholder="Write a message..." />
+      <button id="sender" onClick="addChatMessage()">Send</button>
+      <button
+        id="clearSendBtn"
+        class="clear-input-button"
+        onClick="clearInput()"
+      >
+        Clear
+      </button>
+    </div>
+  </body>
+</html>

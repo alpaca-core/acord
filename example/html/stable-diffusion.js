@@ -1,6 +1,6 @@
 "use strict";
 
-const LOG_LEVLEL = {
+const LOG_LEVEL = {
   INFO: 0,
   SUCCESS: 1,
   ERROR: 2,
@@ -9,11 +9,11 @@ const LOG_LEVLEL = {
 function setStatus(message, level) {
   const status = document.getElementById("status");
   status.innerText = message;
-  if (level === LOG_LEVLEL.INFO) {
+  if (level === LOG_LEVEL.INFO) {
     status.style.color = "var(--color-header)";
-  } else if (level === LOG_LEVLEL.SUCCESS) {
+  } else if (level === LOG_LEVEL.SUCCESS) {
     status.style.color = "var(--color-green)";
-  } else if (level === LOG_LEVLEL.ERROR) {
+  } else if (level === LOG_LEVEL.ERROR) {
     status.style.color = "var(--color-red)";
   }
 }
@@ -33,7 +33,7 @@ const ws = new WebSocket(localhost);
 
 ws.onopen = () => {
   console.log("Connected to Stable Diffusion WebSocket.");
-  setStatus("Connected!", LOG_LEVLEL.SUCCESS);
+  setStatus("Connected!", LOG_LEVEL.SUCCESS);
   acState = AC_STATES.CONNECTED;
 };
 
@@ -41,7 +41,7 @@ ws.onerror = (error) => {
   console.error("WebSocket error:", error);
   setStatus(
     `Error: Couldn't connect to ${localhost}! Start the server...`,
-    LOG_LEVLEL.ERROR
+    LOG_LEVEL.ERROR
   );
   acState = AC_STATES.DISCONNECTED;
 };
@@ -142,13 +142,13 @@ async function prepare() {
 
 async function loadModel() {
   if (ws.readyState !== WebSocket.OPEN) {
-    setStatus("WebSocket not connected!", LOG_LEVLEL.ERROR);
+    setStatus("WebSocket not connected!", LOG_LEVEL.ERROR);
     return;
   }
   if (acState === AC_STATES.INSTANCE_STARTED) {
     setStatus(
       "Model is already loaded. Refresh to load a new one.",
-      LOG_LEVLEL.ERROR
+      LOG_LEVEL.ERROR
     );
     return;
   }
@@ -157,7 +157,7 @@ async function loadModel() {
     const modelLoadBtn = document.getElementById("loadBtn");
     const modelPath = modelInput.value;
     if (modelPath === "") {
-      setStatus("Please enter the path to the model!", LOG_LEVLEL.ERROR);
+      setStatus("Please enter the path to the model!", LOG_LEVEL.ERROR);
       return;
     }
     modelLoadBtn.disabled = true;
@@ -175,12 +175,12 @@ async function loadModel() {
     genBtn.style.opacity = "0.6";
     genBtn.style.pointerEvents = "none";
 
-    setStatus("Loading...", LOG_LEVLEL.INFO);
+    setStatus("Loading...", LOG_LEVEL.INFO);
     let loadingError = false;
     let handleError = (data) => {
       setStatus(
         `Error loading model! Message: "${data.data}"`,
-        LOG_LEVLEL.ERROR
+        LOG_LEVEL.ERROR
       );
       modelLoadBtn.disabled = false;
       modelLoadBtn.style.opacity = "1";
@@ -219,7 +219,7 @@ async function loadModel() {
 
     acState = AC_STATES.INSTANCE_STARTED;
     console.log("Instance started!");
-    setStatus("Model loaded!", LOG_LEVLEL.SUCCESS);
+    setStatus("Model loaded!", LOG_LEVEL.SUCCESS);
 
     const modelBox = document.getElementById("modelBox");
     modelBox.innerHTML = "";
@@ -237,7 +237,7 @@ async function loadModel() {
     modelBox.appendChild(p);
     modelBox.appendChild(reloadBtn);
   } else {
-    setStatus("Provider is not loaded yet!", LOG_LEVLEL.ERROR);
+    setStatus("Provider is not loaded yet!", LOG_LEVEL.ERROR);
   }
 }
 
@@ -246,7 +246,7 @@ async function sendPrompt() {
   const genBtn = document.getElementById("genBtn");
 
   if (ws.readyState !== WebSocket.OPEN) {
-    setStatus("WebSocket not connected!", LOG_LEVLEL.ERROR);
+    setStatus("WebSocket not connected!", LOG_LEVEL.ERROR);
     return;
   }
 
@@ -258,7 +258,7 @@ async function sendPrompt() {
     genBtn.disabled = true;
     genBtn.style.opacity = "0.6";
     genBtn.style.pointerEvents = "none";
-    setStatus("Generating...", LOG_LEVLEL.INFO);
+    setStatus("Generating...", LOG_LEVEL.INFO);
 
     const responseData = await sendRequest({
       op: "textToImage",
@@ -268,7 +268,7 @@ async function sendPrompt() {
     fillImageData(responseData);
     setStatus(
       "Generation Done! Try again with a new prompt.",
-      LOG_LEVLEL.SUCCESS
+      LOG_LEVEL.SUCCESS
     );
 
     promptInput.disabled = false;
@@ -278,9 +278,26 @@ async function sendPrompt() {
     genBtn.style.opacity = "1";
     genBtn.style.pointerEvents = "auto";
   } else {
-    setStatus("Model is not loaded yet!", LOG_LEVLEL.ERROR);
+    setStatus("Model is not loaded yet!", LOG_LEVEL.ERROR);
   }
 }
 
+function openInstructionsDialog() {
+  const dialog = document.getElementById("customAlert");
+  dialog.showModal();
+}
+
+function closeInstructionsDialog() {
+  document.getElementById("customAlert").close();
+}
+
+document.getElementById("customAlert").addEventListener("click", function (e) {
+  if (e.target === this) {
+    this.close();
+  }
+});
+
+window.closeInstructionsDialog = closeInstructionsDialog;
+window.openInstructionsDialog = openInstructionsDialog;
 window.loadModel = loadModel;
 window.sendPrompt = sendPrompt;

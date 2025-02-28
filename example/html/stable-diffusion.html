@@ -17,7 +17,25 @@
         <div class="left-col">
           <div class="input-box" id="modelBox">
             <input type="text" id="model" placeholder="Enter Model Path" />
-            <button id="loadBtn" onclick="loadModel()">Load Model</button>
+            <section class="button-with-instructions">
+              <button id="loadBtn" onclick="loadModel()">Load Model</button>
+              <div class="tooltip-container">
+                <button id="instructions" onclick="openInstructionsDialog()">
+                  ?
+                </button>
+                <span class="tooltip-text">Instructions</span>
+              </div>
+              <dialog id="customAlert">
+                <p>Step 1</p>
+                <p>Step 2</p>
+                <button
+                  style="width: fit-content"
+                  onclick="closeInstructionsDialog()"
+                >
+                  OK
+                </button>
+              </dialog>
+            </section>
           </div>
           <div class="input-box">
             <input type="text" id="prompt" placeholder="Enter Prompt" />
