@@ -29,12 +29,15 @@ struct AssetMgr::Impl {
     ac::xec::strand m_strand{m_xctx.make_strand()};
     std::thread m_thread;
 
+    std::string m_mainAssetDir;
     std::vector<std::string> m_localDirs;
     std::unordered_map<std::string, std::string> m_assetUrlToPath;
 
     Impl() {
-        m_localDirs.push_back(fs::expandPath("~/.ac-assets"));
-        fs::mkdir_p(m_localDirs.front());
+        m_mainAssetDir = fs::expandPath("~/.ac-assets");
+        fs::mkdir_p(m_mainAssetDir);
+
+        m_localDirs.push_back(m_mainAssetDir);
 
         m_thread = std::thread([this]() {
             auto guard = m_xctx.make_work_guard();
@@ -80,7 +83,7 @@ struct AssetMgr::Impl {
             if (found) continue;
 
             // download from remote
-            auto dlPath = fs::getTempDir() + "/acord-dl/" + fname;
+            auto dlPath = m_mainAssetDir + "/.acord-dl/" + fname;
             fs::touch(dlPath);
 
             std::ofstream ofs(dlPath, std::ios::binary);
