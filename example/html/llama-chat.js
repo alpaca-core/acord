@@ -209,14 +209,6 @@ function writeToScreen(message) {
   output.scrollTop = output.scrollHeight;
 }
 
-function clearInput() {
-  document.getElementById("data_to_send").value = "";
-}
-
-function clearLoadModelInput() {
-  document.getElementById("modelFile").value = "";
-}
-
 function toggleElements(ids, enabled) {
   const state = enabled
     ? { disabled: false, opacity: 1, pointerEvents: "auto" }
@@ -233,17 +225,17 @@ function toggleElements(ids, enabled) {
 }
 
 function disableLoadModelRow() {
-  toggleElements(["modelFile", "loadBtn", "clearLoadBtn"], false);
+  toggleElements(["modelFile", "loadBtn"], false);
 }
 function enableLoadModelRow() {
-  toggleElements(["modelFile", "loadBtn", "clearLoadBtn"], true);
+  toggleElements(["modelFile", "loadBtn"], true);
 }
 
 function disableSendRow() {
-  toggleElements(["data_to_send", "sender", "clearSendBtn"], false);
+  toggleElements(["data_to_send", "sender"], false);
 }
 function enableSendRow() {
-  toggleElements(["data_to_send", "sender", "clearSendBtn"], true);
+  toggleElements(["data_to_send", "sender"], true);
 }
 
 window.addEventListener("load", init, false);
@@ -251,5 +243,3 @@ window.addEventListener("load", init, false);
 window.addChatMessage = addChatMessage;
 window.loadModel = loadModel;
 window.wsSend = wsSend;
-window.clearInput = clearInput;
-window.clearLoadModelInput = clearLoadModelInput;
