@@ -74,6 +74,7 @@ Here's a list of the major acord-related features we're planning to work on in t
 * Refine and improve features of the existing plugins. Some priorities include:
     * Video generation via Stable Diffusion
     * Improving llama.cpp-based chat
+* Stability improvements and integration tests
 * Add more plugins. Some priorities here include:
     * Text-to-speech
     * Alternative LLM plugin
