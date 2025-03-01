@@ -153,7 +153,7 @@ async function loadModel() {
     return;
   }
   if (acState === AC_STATES.INITIALIZED) {
-    const modelInput = document.getElementById("model");
+    const modelInput = document.getElementById("modelFile");
     const modelLoadBtn = document.getElementById("loadBtn");
     const modelPath = modelInput.value;
     if (modelPath === "") {

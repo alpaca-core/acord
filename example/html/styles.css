@@ -123,6 +123,20 @@ input[type="checkbox"] {
   vertical-align: middle;
 }
 
+input[type="file"] {
+  padding: 12px;
+  border: 2px solid var(--input-border);
+  border-radius: 4px;
+  width: 100%;
+  font-size: 1.1em;
+  background-color: var(--input-bg);
+  color: var(--input-text-color);
+  transition: border-color 0.3s ease;
+}
+input[type="file"]::file-selector-button {
+  display: none;
+}
+
 label {
   font-size: 1em;
   vertical-align: middle;
@@ -165,7 +179,7 @@ button:hover {
   border-top: 1px solid var(--border-color);
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
-  margin-bottom: 4px
+  margin-bottom: 4px;
   border-radius: 4px;
 }
 
