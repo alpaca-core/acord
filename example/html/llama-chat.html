@@ -15,6 +15,28 @@
     <div class="input-row">
       <input type="text" id="modelFile" placeholder="Enter Model Path" />
       <button id="loadBtn" onclick="loadModel()">Load</button>
+      <div class="tooltip-container">
+        <button id="instructions" onclick="openInstructionsDialog()">
+          ?
+        </button>
+        <span class="tooltip-text">Instructions</span>
+      </div>
+      <dialog id="customAlert">
+        <p><strong>1. Download a gguf model file</strong></p>
+        <p>We recommend
+          <a
+            href="https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/blob/main/Meta-Llama-3-8B-Instruct-Q6_K.gguf"
+            target="blank"
+            >
+            Meta-Llama-3-8B-Instruct-Q6_K.gguf
+          </a>, but any gguf supported by llama.cpp will do.
+        </p>
+        <p><strong>2. Enter/paste the path in the model path input</strong></p>
+        <p>eg <code>/home/user/Downloads/Meta-Llama-3-8B-Instruct-Q6_K.gguf</code></p>
+        <p><strong>3. Press Load and wait</strong></p>
+        <p><strong>4. Chat with the LLM</strong></p>
+        <button onclick="closeInstructionsDialog()">OK</button>
+      </dialog>
     </div>
     <p id="status"></p>
     <div id="output"></div>

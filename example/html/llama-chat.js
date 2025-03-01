@@ -238,8 +238,18 @@ function enableSendRow() {
   toggleElements(["data_to_send", "sender"], true);
 }
 
+function openInstructionsDialog() {
+  const dialog = document.getElementById("customAlert");
+  dialog.showModal();
+}
+function closeInstructionsDialog() {
+  document.getElementById("customAlert").close();
+}
+
 window.addEventListener("load", init, false);
 
+window.closeInstructionsDialog = closeInstructionsDialog;
+window.openInstructionsDialog = openInstructionsDialog;
 window.addChatMessage = addChatMessage;
 window.loadModel = loadModel;
 window.wsSend = wsSend;
