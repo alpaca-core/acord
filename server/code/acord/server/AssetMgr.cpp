@@ -99,7 +99,7 @@ struct AssetMgr::Impl {
                     ofs.write((const char*)chunk.data(), chunk.size());
                     ++tmb;
                     if (tmb % 10 == 0) {
-                        ACORD_SRV_LOG(Info, tmb/10, " MB downloading ", url);
+                        ACORD_SRV_LOG(Info, tmb/10, "0 MB downloading ", url);
                     }
                 }
                 ofs.close();
