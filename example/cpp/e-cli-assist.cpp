@@ -51,7 +51,7 @@ ShellInfo getShellInfo() {
         return {"Windows cmd", "cmd", '>'};
     }
     else if (name == "powershell") {
-        return { "Windows PowerShell", "ps", '>'};
+        return {"Windows PowerShell", "ps", '>'};
     }
     else {
         return {name, name, '$'};
@@ -109,8 +109,9 @@ int main(int argc, char* argv[]) try {
     expectStateChange(io.poll(), "acord");
 
     io.push({"make_assets_available", std::vector<std::string>{
-        "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q6_k-00001-of-00002.gguf",
-        "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q6_k-00002-of-00002.gguf"
+    	"https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q8_0.gguf"
+        //"https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q6_k-00001-of-00002.gguf",
+        //"https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q6_k-00002-of-00002.gguf"
     }});
     auto f = io.poll(astl::timeout::after_ms(100));
     if (!f.success()) {
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) try {
     expectSuccess(io.poll());
     expectStateChange(io.poll(), "model-loaded");
 
-    io.push({"start-instance", {}});
+    io.push({"start-instance", {{"ctx_size", 2048}}});
     expectSuccess(io.poll());
     expectStateChange(io.poll(), "instance");
 
@@ -138,7 +139,7 @@ int main(int argc, char* argv[]) try {
         {"max_tokens", 200},
         {"stream", false},
     }});
-    expectSuccess(io.poll());
+
     f = io.poll();
     expectSuccess(f);
 
