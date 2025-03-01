@@ -14,7 +14,6 @@ The current release is a preview of the daemon with several AI-based demos.
 This preview release loads several hard-coded plugins for AI inference:
 
 * [ilib-llama.cpp](https://github.com/alpaca-core/ilib-llama.cpp): Multiple LLM-s wrapping [ggerganov/llama.cpp](https://github.com/ggerganov/llama.cpp)
-* [ilib-whisper.cpp](https://github.com/alpaca-core/ilib-whisper.cpp): Whisper ASR wrapping [ggerganov/whisper.cpp](https://github.com/ggerganov/whisper.cpp)
 * [ilib-sd.cpp](https://github.com/alpaca-core/ilib-sd.cpp): Image generation with Stable Diffusion wrapping [leejet/stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp)
 
 For all of these the supported compute backends for now are CPU, CUDA, and Metal on Apple Silicon.

@@ -35,7 +35,7 @@ endmacro()
 #######################################
 # packages
 
-add_ac_local(0.1.17)
+add_ac_local(0.1.18)
 
 if(ACORD_BUILD_TESTS)
     ac_dep(doctest-util)
@@ -47,7 +47,7 @@ endif()
 if(NOT AC_BUILD_DEPLOY)
     make_ac_local_plugin_available(
         NAME ilib-foo
-        VERSION 0.1.0
+        VERSION 0.1.2
         GITHUB alpaca-core/ilib-foo
     )
 
