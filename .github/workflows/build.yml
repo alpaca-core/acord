@@ -1,0 +1,26 @@
+name: Build
+on:
+  workflow_dispatch: # manual
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  build-and-test:
+    name: ${{ matrix.cfg.name }}
+    runs-on: ${{ matrix.cfg.os }}
+    strategy:
+      matrix:
+        cfg:
+          - {name: "linux gcc dbg", os: ubuntu-latest, preset: release-demo }
+          - {name: "windows msvc dbg", os: windows-latest, preset: release-demo }
+          - {name: "macos clang dbg", os: macos-latest, preset: release-demo }
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Configure
+        run: cmake --preset ${{ matrix.cfg.preset }} -B build
+      - name: Build
+        run: cmake --build build
