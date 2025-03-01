@@ -123,6 +123,16 @@ input[type="checkbox"] {
   vertical-align: middle;
 }
 
+input[type="number"] {
+  padding: 12px;
+  border: 2px solid var(--input-border);
+  border-radius: 4px;
+  font-size: 1.1em;
+  background-color: var(--input-bg);
+  color: var(--input-text-color);
+  transition: border-color 0.3s ease;
+}
+
 label {
   font-size: 1em;
   vertical-align: middle;
@@ -346,7 +356,7 @@ button.apply-button:hover {
   display: none;
 }
 
-.button-with-instructions {
+.button-row {
   display: flex;
   gap: 8px;
   align-items: center;

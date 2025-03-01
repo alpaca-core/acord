@@ -17,7 +17,7 @@
         <div class="left-col">
           <div class="input-box" id="modelBox">
             <input type="text" id="modelFile" placeholder="Enter Model Path" />
-            <section class="button-with-instructions">
+            <section class="button-row">
               <button id="loadBtn" onclick="loadModel()">Load Model</button>
               <div class="tooltip-container">
                 <button id="instructions" onclick="openInstructionsDialog()">
@@ -48,6 +48,7 @@
                 <p><strong>3. Press Load Model and wait</strong></p>
                 <p><strong>4. Enter a prompt in the prompt input</strong></p>
                 <p>eg <code>A cat in a hat</code></p>
+                <p>Optionally set number of steps to use. More steps generally means higher quality.</p>
                 <p><strong>5. Press Generate Image and wait</strong></p>
                 <button
                   style="margin-top: 40px;"
@@ -60,7 +61,13 @@
           </div>
           <div class="input-box">
             <input type="text" id="prompt" placeholder="Enter Prompt" />
-            <button id="genBtn" onclick="sendPrompt()">Generate Image</button>
+            <section class="button-row">
+              <button id="genBtn" onclick="sendPrompt()">Generate Image</button>
+              <div class="tooltip-container">
+                <input type="number" id="numSteps" value="20" min="1" max="50"/>
+                <span class="tooltip-text">Number of steps</span>
+              </div>
+            </section>
           </div>
           <p id="status">Waiting for input...</p>
         </div>

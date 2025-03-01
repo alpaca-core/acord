@@ -260,9 +260,16 @@ async function sendPrompt() {
     genBtn.style.pointerEvents = "none";
     setStatus("Generating...", LOG_LEVEL.INFO);
 
+    let numSteps = parseInt(document.getElementById("numSteps").value);
+    if (numSteps < 1) {
+      numSteps = 1;
+    }
+    if (numSteps > 50) {
+      numSteps = 50;
+    }
     const responseData = await sendRequest({
       op: "textToImage",
-      data: { prompt: promptInput.value, width: 512, height: 512 },
+      data: { prompt: promptInput.value, width: 512, height: 512, steps: numSteps },
     });
 
     fillImageData(responseData);
