@@ -76,7 +76,10 @@ async function connect() {
 }
 
 async function loadProvider() {
-  await wsSend('{"op": "load_provider", "data": {"name": "lama"}}');
+  await wsSend({
+    op: "load_provider",
+    data: { name: "llama" },
+  });
   acState = AC_STATES.INITIALIZED;
   setStatus("Provider loaded!", LOG_LEVEL.SUCCESS);
   enableLoadModelRow();
@@ -96,7 +99,7 @@ async function loadModel() {
   }
 
   if (acState === AC_STATES.INITIALIZED) {
-    const loadModelInput = document.getElementById("model").value;
+    const loadModelInput = document.getElementById("modelFile").value;
     if (loadModelInput === "") {
       setStatus("Please enter the path to the model!", LOG_LEVEL.ERROR);
       return;
@@ -104,7 +107,10 @@ async function loadModel() {
     disableLoadModelRow();
 
     setStatus("Loading...", LOG_LEVEL.INFO);
-    await wsSend(`{"op": "load-model", "data": {"gguf": "${loadModelInput}"}}`);
+    await wsSend({
+      op: "load-model",
+      data: { gguf: loadModelInput },
+    });
     acState = AC_STATES.MODEL_LOADED;
     setStatus("Model loaded!", LOG_LEVEL.SUCCESS);
 
@@ -122,13 +128,17 @@ async function loadModel() {
 }
 
 async function startInstance() {
-  await wsSend('{"op": "start-instance", "data": {}}');
+  await wsSend({
+    op: "start-instance",
+    data: {},
+  });
 }
 
 async function beginChat() {
-  await wsSend(
-    `{"op": "begin-chat", "data": {"setup": "Chat between a user and a helpful AI assistant."}}`
-  );
+  await wsSend({
+    op: "begin-chat",
+    data: { setup: "Chat between a user and a helpful AI assistant." },
+  });
 }
 
 async function addChatMessage() {
@@ -140,7 +150,10 @@ async function addChatMessage() {
   );
   document.getElementById("data_to_send").value = "";
 
-  await wsSend(`{"op": "add-chat-prompt", "data": {"prompt": "${message}"}}`);
+  await wsSend({
+    op: "add-chat-prompt",
+    data: { prompt: message },
+  });
   acState = AC_STATES.ADD_CHAT_MESSAGE;
   setStatus("Answering...", LOG_LEVEL.INFO);
 
@@ -153,16 +166,19 @@ async function addChatMessage() {
   output.scrollTop = output.scrollHeight;
 
   // if you don't want to stream the result add a parameter - "stream": false
-  // const response = await wsSend(`{"op": "get-chat-response", "data": {"stream": false}}`);
-  const response = await wsSend(`{"op": "get-chat-response", "data": null}`);
-
+  // const response = await wsSend({
+  //   op: "get-chat-response",
+  //   data: { stream: false },
+  // });
+  const response = await wsSend({
+    op: "get-chat-response",
+    data: null,
+  });
   p.innerHTML += `<span>${response.data.response}</span>`;
 }
 
-async function wsSend(staticMessage) {
-  const inputMessage = document.getElementById("data_to_send").value;
-  const message = staticMessage || inputMessage;
-  if (!message) return;
+async function wsSend(obj) {
+  const message = JSON.stringify(obj);
 
   ws.send(message);
 
@@ -198,7 +214,7 @@ function clearInput() {
 }
 
 function clearLoadModelInput() {
-  document.getElementById("model").value = "";
+  document.getElementById("modelFile").value = "";
 }
 
 function toggleElements(ids, enabled) {
@@ -217,10 +233,10 @@ function toggleElements(ids, enabled) {
 }
 
 function disableLoadModelRow() {
-  toggleElements(["model", "loadBtn", "clearLoadBtn"], false);
+  toggleElements(["modelFile", "loadBtn", "clearLoadBtn"], false);
 }
 function enableLoadModelRow() {
-  toggleElements(["model", "loadBtn", "clearLoadBtn"], true);
+  toggleElements(["modelFile", "loadBtn", "clearLoadBtn"], true);
 }
 
 function disableSendRow() {
