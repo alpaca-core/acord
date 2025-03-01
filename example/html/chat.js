@@ -144,15 +144,19 @@ async function addChatMessage() {
   acState = AC_STATES.ADD_CHAT_MESSAGE;
   setStatus("Answering...", LOG_LEVEL.INFO);
 
-  const response = await wsSend(`{"op": "get-chat-response", "data": null}`);
   setStatus("Ask me anything!", LOG_LEVEL.SUCCESS);
   acState = AC_STATES.GET_CHAT_RESPONSE;
   const output = document.getElementById("output");
   const p = document.createElement("p");
   p.innerHTML = '<span style="color: var(--color-red);">model: </span>';
-  p.innerHTML += `<span>${response.data.response}</span>`;
   output.appendChild(p);
   output.scrollTop = output.scrollHeight;
+
+  // if you don't want to stream the result add a parameter - "stream": false
+  // const response = await wsSend(`{"op": "get-chat-response", "data": {"stream": false}}`);
+  const response = await wsSend(`{"op": "get-chat-response", "data": null}`);
+
+  p.innerHTML += `<span>${response.data.response}</span>`;
 }
 
 async function wsSend(staticMessage) {
@@ -163,9 +167,6 @@ async function wsSend(staticMessage) {
   ws.send(message);
 
   return new Promise((resolve) => {
-    const p = document.createElement("p");
-    p.innerHTML = '<span style="color: var(--color-red);">model: </span>';
-
     ws.onmessage = (event) => {
       const response = JSON.parse(event.data);
       console.log("onmessage", response);
@@ -175,8 +176,7 @@ async function wsSend(staticMessage) {
         resolve(response);
       } else if (response.op === "token") {
         const output = document.getElementById("output");
-        output.appendChild(p);
-        p.innerHTML += `<span>${response.data}</span>`;
+        output.lastElementChild.innerHTML += `<span>${response.data}</span>`;
         output.scrollTop = output.scrollHeight;
       } else {
         console.log(`Op - ${response.op}: Received`);
