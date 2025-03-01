@@ -55,7 +55,7 @@ struct AssetMgr::Impl {
 
         ac::frameio::BlockingIo io(std::move(ep), m_blockingCtx);
 
-        for (int i = 0; i < assetUrls.size(); ++i) {
+        for (size_t i = 0; i < assetUrls.size(); ++i) {
             auto& url = assetUrls[i];
             auto& path = paths[i];
 
