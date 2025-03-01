@@ -26,10 +26,31 @@
                 <span class="tooltip-text">Instructions</span>
               </div>
               <dialog id="customAlert">
-                <p>Step 1</p>
-                <p>Step 2</p>
+                <p><strong>1. Download one of:</strong></p>
+                <p>Stable Diffusion v1.4:
+                  <a
+                    href="https://huggingface.co/CompVis/stable-diffusion-v-1-4-original/blob/main/sd-v1-4.ckpt"
+                    target="blank"
+                  >
+                    sd-v1-4.ckpt @ huggingface
+                  </a>
+                </p>
+                <p>Stable Diffusion 3 Medium <em>(you will need to accept the terms of use to download)</em>:
+                  <a
+                    href="https://huggingface.co/stabilityai/stable-diffusion-3-medium/blob/main/sd3_medium_incl_clips_t5xxlfp8.safetensors"
+                    target="blank"
+                  >
+                    sd3_medium_incl_clips_t5xxlfp8.safetensors @ huggingface
+                  </a>
+                </p>
+                <p><strong>2. Enter/paste the path in the model path input</strong></p>
+                <p>eg <code>/home/user/Downloads/sd-v1-4.ckpt</code></p>
+                <p><strong>3. Press Load Model and wait</strong></p>
+                <p><strong>4. Enter a prompt in the prompt input</strong></p>
+                <p>eg <code>A cat in a hat</code></p>
+                <p><strong>5. Press Generate Image and wait</strong></p>
                 <button
-                  style="width: fit-content"
+                  style="margin-top: 40px;"
                   onclick="closeInstructionsDialog()"
                 >
                   OK
