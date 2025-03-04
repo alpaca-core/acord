@@ -9,6 +9,13 @@ The Alpaca Core daemon. A daemon that provides a WebSocket API for the [Alpaca C
 
 The current release is a preview of the daemon with several AI-based demos.
 
+## Examples
+
+![cli assist bash](doc/cli-assist-bash.webp)
+![cli assist powershell](doc/cli-assist-ps.webp)
+
+To run follow the instructions for the individual examples in the [example](example) directory.
+
 ## Preview Info and Limitations
 
 This preview release loads several hard-coded plugins for AI inference:
@@ -46,10 +53,6 @@ Or on Windows
 ```cmd
 > .\build\bin\acord.exe
 ```
-
-## Running the Demos
-
-Follow the instructions for the individual demos in the [example](example) directory.
 
 ## Making Your Own Apps
 
