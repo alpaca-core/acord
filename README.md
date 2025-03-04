@@ -12,6 +12,7 @@ The current release is a preview of the daemon with several AI-based demos.
 ## Examples
 
 ![stable diffusion](doc/sd-screencap.webp)
+![llama chat](doc/llama-screencap.webp)
 ![cli assist bash](doc/cli-assist-bash.webp)
 ![cli assist powershell](doc/cli-assist-ps.webp)
 
