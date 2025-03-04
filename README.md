@@ -2,7 +2,8 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) 
 
-The Alpaca Core daemon. A daemon that provides a WebSocket API for the [Alpaca Core SDK](https://github.com/alpaca-core/alpaca-core-sdk/).
+The Alpaca Core daemon. A daemon that provides a WebSocket API for the [Alpaca Core SDK](https://github.com/alpaca-core/alpaca-core-sdk/). <br>
+See the [AlpacaCore SDK Overview](https://www.alpacacore.com/products/overview) to see how Acord fits into the larger picture.
 
 > [!IMPORTANT]
 > This project is still in in an alpha stage of development. Significant changes are very likely, or rather, certain, and backwards compatibility is disregarded.
