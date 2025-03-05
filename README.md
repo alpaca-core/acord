@@ -6,7 +6,7 @@ The Alpaca Core daemon. A daemon that provides a WebSocket API for the [Alpaca C
 See the [AlpacaCore SDK Overview](https://www.alpacacore.com/products/overview) to see how Acord fits into the larger picture.
 
 > [!IMPORTANT]
-> This project is still in in an alpha stage of development. Significant changes are very likely, or rather, certain, and backwards compatibility is disregarded.
+> This project is still in an alpha stage of development. Significant changes are very likely, or rather, certain, and backwards compatibility is disregarded.
 
 The current release is a preview of the daemon with several AI-based demos.
 
