@@ -8,7 +8,7 @@
 #include <ac/frameio/local/BufferedChannel.hpp>
 #include <ac/frameio/local/BufferedChannelStream.hpp>
 #include <ac/frameio/StreamEndpoint.hpp>
-#include <ac/frameio/local/BlockingIo.hpp>
+#include <ac/frameio/BlockingIo.hpp>
 
 #include <ahttp/ahttp.hpp>
 #include <astl/move_capture.hpp>

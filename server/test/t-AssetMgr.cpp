@@ -4,7 +4,7 @@
 #include <acord/server/AssetMgr.hpp>
 #include <acord/server/FsUtil.hpp>
 #include <ac/frameio/StreamEndpoint.hpp>
-#include <ac/frameio/local/BlockingIo.hpp>
+#include <ac/frameio/BlockingIo.hpp>
 #include <doctest/doctest.h>
 
 #include <ac/jalog/Fixture.inl>
