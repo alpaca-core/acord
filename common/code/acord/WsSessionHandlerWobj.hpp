@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 //
 #pragma once
-#include <ac/xec/notifiable.hpp>
 #include <ac/xec/wait_func.hpp>
 #include <ac/xec/wait_func_invoke.hpp>
 #include <fishnets/ExecutorPtr.hpp>
@@ -10,17 +9,13 @@
 
 namespace acord {
 
-class WsSessionHandlerWobj final : public ac::xec::notifiable {
+class WsSessionHandlerWobj {
     fishnets::ExecutorPtr m_executor;
     ac::xec::wait_func m_cb;
 public:
     explicit WsSessionHandlerWobj(fishnets::ExecutorPtr e) : m_executor(std::move(e)) {}
 
-    void notify_all() override {
-        notify_one();
-    }
-
-    void notify_one() override {
+    void notify_one() {
         post(m_executor, [this] {
             if (m_cb) {
                 auto cb = std::exchange(m_cb, nullptr);
