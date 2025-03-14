@@ -17,7 +17,7 @@
 #include <iostream>
 
 #if !defined(SAME_PROCESS_SERVER)
-#   define SAME_PROCESS_SERVER 0
+#   define SAME_PROCESS_SERVER 1
 #endif
 
 #if SAME_PROCESS_SERVER
@@ -40,11 +40,10 @@ int main() try {
         ac::frameio::BufferedChannel_create(10)
     );
 
-    ac::frameio::BlockingIoCtx blockingCtx;
     acord::client::IoCtx acordIo;
     acordIo.connect(std::move(remote));
 
-    ac::schema::BlockingIoHelper io(std::move(local), blockingCtx);
+    ac::schema::BlockingIoHelper io(std::move(local));
 
     io.expectState<acrd::State>();
     auto files = io.call<acrd::State::OpMakeAssetsAvailable>(

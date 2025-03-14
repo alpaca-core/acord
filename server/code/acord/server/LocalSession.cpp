@@ -3,7 +3,7 @@
 //
 #include "LocalSession.hpp"
 
-#include "AssetMgr.hpp"
+#include "AssetMgrInterface.hpp"
 #include "AppCtx.hpp"
 
 #include <acord/schema/Acord.hpp>
@@ -13,7 +13,7 @@
 
 #include <ac/frameio/IoEndpoint.hpp>
 #include <ac/local/Lib.hpp>
-#include <ac/local/IoCtx.hpp>
+#include <ac/local/DefaultBackend.hpp>
 
 #include <ac/xec/coro.hpp>
 
@@ -27,10 +27,20 @@ using throw_ex = ac::throw_ex;
 
 namespace {
 using Schema = ac::schema::acord::State;
+namespace amgr = ac::schema::amgr;
 
-ac::xec::coro<void> Acord_makeAssetsAvailable(ac::frameio::IoEndpoint& io, std::vector<std::string> urls, AssetMgr& assetMgr) {
+ac::xec::coro<void> Acord_makeAssetsAvailable(ac::frameio::IoEndpoint& io, std::vector<std::string> urls, ac::local::Backend& backend) {
     auto ex = io.get_executor();
-    ac::frameio::IoEndpoint aio(assetMgr.makeAssetsAvailable(std::move(urls)), ex);
+    ac::frameio::IoEndpoint aio(backend.connect(amgr::Interface::id), ex);
+    auto state = co_await aio.poll(); // state
+
+    co_await aio.push({
+        .op = amgr::State::OpMakeAssetsAvailable::id,
+        .data = std::move(urls)
+    });
+
+    static_assert(std::is_same_v<amgr::State::OpMakeAssetsAvailable::Return, Schema::OpMakeAssetsAvailable::Return>);
+
     auto result = co_await aio.poll();
     result.value.op = Schema::OpMakeAssetsAvailable::id;
     co_await io.push(std::move(result.value));
@@ -49,20 +59,18 @@ ac::xec::coro<void> Acord_run(const AppCtx& appCtx, ac::frameio::StreamEndpoint 
                 co_await Acord_makeAssetsAvailable(
                     io,
                     ac::schema::Struct_fromDict<Schema::OpMakeAssetsAvailable::Params>(std::move(f.value.data)),
-                    appCtx.assetMgr
+                    appCtx.backend
                 );
             }
             else if (f.value.op == Schema::OpLoadProvider::id) {
                 std::string error;
                 try {
                     auto name = ac::schema::Struct_fromDict<Schema::OpLoadProvider::Params>(std::move(f.value.data)).name;
-                    assert(name.hasValue());
-                    auto& provider = ac::local::Lib::getProvider(name.value());
 
                     co_await io.push({Schema::OpLoadProvider::id, {}});
 
                     auto transfer = io.detach();
-                    appCtx.ioCtx.attach(provider, std::move(transfer));
+                    appCtx.backend.attach(name.value(), std::move(transfer));
                     co_return;
                 }
                 catch (std::exception& e) {

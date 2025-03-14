@@ -5,14 +5,12 @@
 
 namespace ac {
 namespace xec { class context; }
-namespace local { class IoCtx; }
+namespace local { class Backend; }
 }
 
 namespace acord::server {
-class AssetMgr;
 struct AppCtx {
     ac::xec::context& localSessionXCtx;
-    ac::local::IoCtx& ioCtx;
-    AssetMgr& assetMgr;
+    ac::local::Backend& backend;
 };
 } // namespace acord::server

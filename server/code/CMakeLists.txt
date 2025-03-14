@@ -15,8 +15,9 @@ target_sources(acord-server PRIVATE
 
     acord/server/FsUtil.hpp
     acord/server/FsUtil.cpp
-    acord/server/AssetMgr.hpp
-    acord/server/AssetMgr.cpp
+    acord/server/AssetMgrInterface.hpp
+    acord/server/AssetMgrService.hpp
+    acord/server/AssetMgrService.cpp
 
     acord/server/LocalSession.hpp
     acord/server/LocalSession.cpp

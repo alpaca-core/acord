@@ -100,11 +100,10 @@ int main(int argc, char* argv[]) try {
         ac::frameio::BufferedChannel_create(10)
     );
 
-    ac::frameio::BlockingIoCtx blockingCtx;
     acord::client::IoCtx acordIo;
     acordIo.connect(std::move(remote));
 
-    ac::frameio::BlockingIo io(std::move(local), blockingCtx);
+    ac::frameio::BlockingIo io(std::move(local));
 
     expectStateChange(io.poll(), "acord");
 
