@@ -7,14 +7,14 @@
 #include "LocalSession.hpp"
 #include "AppCtx.hpp"
 
-#include "AssetMgr.hpp"
+#include "AssetMgrService.hpp"
 
 #include <ac/local/Lib.hpp>
 
 #include <ac/jalog/Instance.hpp>
 #include <ac/jalog/sinks/DefaultSink.hpp>
 
-#include <ac/local/IoCtx.hpp>
+#include <ac/local/DefaultBackend.hpp>
 
 #include <fishnets/Context.hpp>
 #include <fishnets/WsServerHandler.hpp>
@@ -32,11 +32,10 @@
 namespace acord::server {
 
 struct App::Impl {
-    ac::local::IoCtx ioCtx;
+    ac::local::DefaultBackend backend;
     ac::xec::context localSessionXCtx;
     ac::xec::context_work_guard wg;
-    AssetMgr assetMgr;
-    AppCtx ctx{localSessionXCtx, ioCtx, assetMgr};
+    AppCtx ctx{localSessionXCtx, backend};
     fishnets::Context wsCtx;
     std::vector<std::thread> wsThreads;
 
@@ -47,6 +46,9 @@ struct App::Impl {
         ac::local::Lib::addPluginDir(ACLP_OUT_DIR);
 #endif
         ac::local::Lib::loadAllPlugins();
+
+        backend.registerLibServices();
+        backend.registerService(AssetMgr_getServiceFactory());
 
         std::vector<fishnets::EndpointInfo> endpoints;
         if (params.serveLocalhostOnly) {
