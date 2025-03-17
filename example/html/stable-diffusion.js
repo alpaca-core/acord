@@ -1,3 +1,6 @@
+import { encode, decode } from "https://cdn.jsdelivr.net/npm/cbor-x@1.6.0/+esm";
+window.cborX = { encode, decode };
+
 "use strict";
 
 const LOG_LEVEL = {
@@ -28,8 +31,9 @@ const AC_STATES = {
 };
 
 let acState = AC_STATES.ERROR;
-const localhost = "ws://localhost:7654";
+const localhost = "ws://localhost:7654/cbor";
 const ws = new WebSocket(localhost);
+ws.binaryType = "arraybuffer";
 
 ws.onopen = () => {
   console.log("Connected to Stable Diffusion WebSocket.");
@@ -47,36 +51,28 @@ ws.onerror = (error) => {
 };
 
 ws.onmessage = async (event) => {
-  const response = JSON.parse(event.data);
+  const response = cborX.decode(new Uint8Array(event.data));
   console.log(response);
 };
-
 function fillImageData(data) {
   const c = document.createElement("canvas");
   c.width = data.width;
   c.height = data.height;
   const ctx = c.getContext("2d");
-  const imageData = ctx.createImageData(data.width, data.height);
 
+  const pixelData = new Uint8ClampedArray(data.width * data.height * 4);
   let colorI = 0;
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    if (data.data) {
-      imageData.data[i] = data.data.bytes[colorI];
-      imageData.data[i + 1] = data.data.bytes[colorI + 1];
-      imageData.data[i + 2] = data.data.bytes[colorI + 2];
-      imageData.data[i + 3] = 255;
-    } else {
-      imageData.data[i] = Math.ceil(Math.random() * 255);
-      imageData.data[i + 1] = Math.ceil(Math.random() * 255);
-      imageData.data[i + 2] = Math.ceil(Math.random() * 255);
-      imageData.data[i + 3] = 255;
-    }
+  for (let i = 0; i < pixelData.length; i += 4) {
+    pixelData[i] = data.data[colorI];
+    pixelData[i + 1] = data.data[colorI + 1];
+    pixelData[i + 2] = data.data[colorI + 2];
+    pixelData[i + 3] = 255;
     colorI += 3;
   }
-
+  const imageData = new ImageData(pixelData, data.width, data.height);
   ctx.putImageData(imageData, 0, 0);
-  const dataURL = c.toDataURL();
 
+  const dataURL = c.toDataURL();
   const img = document.getElementById("imgResult");
   img.src = dataURL;
   img.onload = () => {
@@ -87,14 +83,14 @@ function fillImageData(data) {
 }
 
 async function sendRequest(data, errorCb) {
-  const request = JSON.stringify(data);
+  const request = cborX.encode(data);
   ws.send(request);
   console.log(`Op - ${data.op}: Started`);
 
   if (data.op === "textToImage") {
     return new Promise((resolve) => {
       ws.onmessage = (event) => {
-        const { data, op } = JSON.parse(event.data);
+        const { data, op } = cborX.decode(new Uint8Array(event.data));
         console.log(`Op - ${op}: Finished`);
         resolve(data);
       };
@@ -102,7 +98,7 @@ async function sendRequest(data, errorCb) {
   } else {
     return new Promise((resolve) => {
       ws.onmessage = (event) => {
-        const response = JSON.parse(event.data);
+        const response = cborX.decode(new Uint8Array(event.data));
         console.log(response);
         if (response.op.startsWith("s:")) {
           console.log(`Op - ${response.op}: Finished`);
