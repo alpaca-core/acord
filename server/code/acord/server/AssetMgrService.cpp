@@ -15,6 +15,7 @@
 #include <ac/frameio/IoEndpoint.hpp>
 #include <ac/schema/SerializeVisitors.hpp>
 #include <ac/FrameUtil.hpp>
+#include <ac/Dict.hpp>
 
 #include <ahttp/ahttp.hpp>
 #include <astl/move_capture.hpp>
@@ -198,7 +199,7 @@ struct AssetMgrService : public ac::local::Service {
         }
     }
 
-    virtual void createSession(ac::frameio::StreamEndpoint ep, std::string_view) override {
+    virtual void createSession(ac::frameio::StreamEndpoint ep, ac::Dict) override {
         co_spawn(m_strand, runSession(std::move(ep)));
     }
 };
@@ -208,7 +209,7 @@ struct AssetMgrServiceFactory : public ac::local::ServiceFactory {
         return g_serviceInfo;
     }
 
-    virtual std::unique_ptr<ac::local::Service> createService(const ac::local::Backend& backend) const override {
+    virtual std::unique_ptr<ac::local::Service> createService(ac::local::Backend& backend) const override {
         return std::make_unique<AssetMgrService>(backend.xctx().io.make_strand());
     }
 };

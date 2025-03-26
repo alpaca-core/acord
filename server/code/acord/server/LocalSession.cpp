@@ -31,7 +31,7 @@ namespace amgr = ac::schema::amgr;
 
 ac::xec::coro<void> Acord_makeAssetsAvailable(ac::frameio::IoEndpoint& io, std::vector<std::string> urls, ac::local::Backend& backend) {
     auto ex = io.get_executor();
-    ac::frameio::IoEndpoint aio(backend.connect(amgr::Interface::id), ex);
+    ac::frameio::IoEndpoint aio(backend.connect(amgr::Interface::id, {}), ex);
     auto state = co_await aio.poll(); // state
 
     co_await aio.push({
@@ -70,7 +70,7 @@ ac::xec::coro<void> Acord_run(const AppCtx& appCtx, ac::frameio::StreamEndpoint 
                     co_await io.push({Schema::OpLoadProvider::id, {}});
 
                     auto transfer = io.detach();
-                    appCtx.backend.attach(name.value(), std::move(transfer));
+                    appCtx.backend.attach(name.value(), {}, std::move(transfer));
                     co_return;
                 }
                 catch (std::exception& e) {
