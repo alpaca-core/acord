@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 project(acord
-    VERSION 0.1.1
+    VERSION 0.1.0
     DESCRIPTION "Alpaca Core local daemon"
     LANGUAGES CXX
 )
@@ -35,7 +35,7 @@ endmacro()
 #######################################
 # packages
 
-add_ac_local(0.1.20)
+add_ac_local(0.1.19)
 
 if(ACORD_BUILD_TESTS)
     ac_dep(doctest-util)

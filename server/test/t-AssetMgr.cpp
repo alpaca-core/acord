@@ -24,7 +24,7 @@ TEST_CASE("dl") {
     ac::local::DefaultBackend backend;
     backend.registerService(AssetMgr_getServiceFactory());
 
-    ac::schema::BlockingIoHelper io(backend.connect(schema::Interface::id, {}));
+    ac::schema::BlockingIoHelper io(backend.connect(schema::Interface::id));
 
     io.expectState<schema::State>();
 
