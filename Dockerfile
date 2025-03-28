@@ -27,15 +27,14 @@ COPY --from=build ${WORKDIR}/out/build/debug-demo/bin ${WORKDIR}/out/build/debug
 
 RUN mkdir -p ${PLUGINSDIR}/lib/ac-local
 
-# COPY --from=build ${PLUGINSDIR}/ilib-llama.cpp-0.1.1-default/bin ${PLUGINSDIR}/ilib-llama.cpp-0.1.1-default/bin
-# RUN cp ${PLUGINSDIR}/ilib-llama.cpp-0.1.1-default/bin/aclp-llama.so ${PLUGINSDIR}/lib/ac-local/aclp-llama.so
+COPY --from=build ${PLUGINSDIR}/ilib-llama.cpp-0.1.1-default/bin ${PLUGINSDIR}/ilib-llama.cpp-0.1.1-default/bin
+RUN cp ${PLUGINSDIR}/ilib-llama.cpp-0.1.1-default/bin/aclp-llama.so ${PLUGINSDIR}/lib/ac-local/aclp-llama.so
 
-# COPY --from=build ${PLUGINSDIR}//ilib-sd.cpp-0.1.1-default/bin ${PLUGINSDIR}//ilib-sd.cpp-0.1.1-default/bin
-# RUN cp ${PLUGINSDIR}/ilib-sd.cpp-0.1.1-default/bin/aclp-sd.so ${PLUGINSDIR}/lib/ac-local/aclp-sd.so && \
+COPY --from=build ${PLUGINSDIR}//ilib-sd.cpp-0.1.1-default/bin ${PLUGINSDIR}//ilib-sd.cpp-0.1.1-default/bin
+RUN cp ${PLUGINSDIR}/ilib-sd.cpp-0.1.1-default/bin/aclp-sd.so ${PLUGINSDIR}/lib/ac-local/aclp-sd.so
 
 COPY --from=build ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin
 RUN cp ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin/aclp-foo.so ${PLUGINSDIR}/lib/ac-local/aclp-foo.so
-
 
 EXPOSE 7654
 CMD ["./out/build/debug-demo/bin/acord"]
