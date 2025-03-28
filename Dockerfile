@@ -37,4 +37,4 @@ COPY --from=build ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin ${PLUGINSDIR}/ilib-fo
 RUN cp ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin/aclp-foo.so ${PLUGINSDIR}/lib/ac-local/aclp-foo.so
 
 EXPOSE 7654
-CMD ["./out/build/debug-demo/bin/acord"]
+CMD ["./out/build/debug-demo/bin/acord", "--all"]
