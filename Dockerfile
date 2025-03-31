@@ -1,7 +1,7 @@
 ARG CMAKEVERSION=3.31.2
 ARG BUILD_TYPE=debug
 
-FROM ubuntu:latest AS base
+FROM nvidia/cuda:12.8.1-devel-ubuntu24.04 AS base
 WORKDIR /usr/local/acord
 
 FROM base AS build
