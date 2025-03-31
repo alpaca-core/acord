@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
                 params.wsPort = atoi(argv[i + 1]);
                 i++;
             }
-        } else if (strcmp(argv[i], "--all") == 0) {
+        } else if (strcmp(argv[i], "--public") == 0) {
             params.serveLocalhostOnly = false;
         }
     }

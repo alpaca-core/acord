@@ -1,8 +1,9 @@
 ARG CMAKEVERSION=3.31.2
-ARG BUILD_TYPE=debug
+ARG BUILD_TYPE=release
 
 FROM nvidia/cuda:12.8.1-devel-ubuntu24.04 AS base
-WORKDIR /usr/local/acord
+ENV WORKDIR=/usr/local/acord
+WORKDIR ${WORKDIR}
 
 FROM base AS build
 ARG BUILD_TYPE
@@ -15,15 +16,15 @@ RUN cmake --preset ${BUILD_TYPE}-demo -G Ninja && \
     ninja -C out/build/${BUILD_TYPE}-demo
 
 FROM base AS final
-ARG WORKDIR=/usr/local/acord
-ARG PLUGINSDIR=${WORKDIR}/out/build/debug-demo/_ac-plugins
+ARG BUILD_TYPE
+ENV PLUGINSDIR=${WORKDIR}/out/build/${BUILD_TYPE}-demo/_ac-plugins
 
 RUN apt-get update && \
     apt-get install -y build-essential
 
 # Copy the full directory structure in order to find the plugins
 # TODO: Check how to use rpath instead of copy the full directory structure
-COPY --from=build ${WORKDIR}/out/build/debug-demo/bin ${WORKDIR}/out/build/debug-demo/bin
+COPY --from=build ${WORKDIR}/out/build/${BUILD_TYPE}-demo/bin ${WORKDIR}/out/build/${BUILD_TYPE}-demo/bin
 
 RUN mkdir -p ${PLUGINSDIR}/lib/ac-local
 
@@ -37,4 +38,4 @@ COPY --from=build ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin ${PLUGINSDIR}/ilib-fo
 RUN cp ${PLUGINSDIR}/ilib-foo-0.1.3-default/bin/aclp-foo.so ${PLUGINSDIR}/lib/ac-local/aclp-foo.so
 
 EXPOSE 7654
-CMD ["./out/build/debug-demo/bin/acord", "--all"]
+CMD ["./out/build/${BUILD_TYPE}-demo/bin/acord", "--public"]
