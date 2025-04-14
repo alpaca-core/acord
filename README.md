@@ -57,6 +57,35 @@ Or on Windows
 > .\build\bin\acord.exe
 ```
 
+### Building with Docker
+
+If you have Docker installed, you can build acord with the following command:
+
+```bash
+$ docker build -t acord .
+```
+
+This will build the acord image and tag it as `acord`. You can then run it with:
+
+```bash
+$ docker run -it --rm --gpus all -v <local/path/to/models>:/models -p 7654:7654 acord
+```
+
+To make multiplatform build you need to:
+
+- Create a builder instance - run it only once
+
+```bash
+$ docker buildx create --name multiarch-builder --use
+$ docker buildx inspect --bootstrap
+```
+
+- To create the actual image, run the following command:
+
+```bash
+$ docker buildx build --platform linux/arm64,linux/amd64 -t acord .
+```
+
 ## Making Your Own Apps
 
 Feel free to experiment and make your own apps. You can do them in any language you want as long as you have a WebSocket client library.

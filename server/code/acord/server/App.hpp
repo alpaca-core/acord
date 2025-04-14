@@ -13,8 +13,6 @@ struct AppParams {
 };
 class ACORD_SERVER_API App {
 public:
-
-
     App(AppParams params = {});
     ~App();
 
