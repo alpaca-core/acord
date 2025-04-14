@@ -1,4 +1,7 @@
 .git/
+.github/
 .cpm/
 build/
 out/
+doc/
+example/
