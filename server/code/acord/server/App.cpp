@@ -57,7 +57,9 @@ struct App::Impl {
         }
         else{
             endpoints.push_back({fishnets::IPv4, params.wsPort});
-            endpoints.push_back({fishnets::IPv6, params.wsPort});
+            // TODO: Check why when IPv6 is enabled, the server does not start
+            // when it's started in docker
+            // endpoints.push_back({fishnets::IPv6, params.wsPort});
         }
 
         wsCtx.wsServe(endpoints, std::make_shared<fishnets::SimpleServerHandler>([this](const fishnets::EndpointInfo&, const fishnets::EndpointInfo&) {
